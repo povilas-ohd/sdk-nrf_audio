@@ -194,7 +194,7 @@ A device can successfully connect to `nRF Cloud`_ using MQTT if the following re
 
      Alternatively, use the nRF Cloud REST API to do this.
 
-  #. Program the credentials in the JSON file into the device using the `Cellular Monitor`_ app.
+  #. Program the credentials in the JSON file into the device using the `Cellular Monitor app`_.
 
   The private key is exposed during these steps, and therefore, this is the less secure option.
   See :ref:`nrf9160_ug_updating_cloud_certificate` for details.
@@ -253,7 +253,7 @@ The following samples demonstrate nRF Cloud-specific functionality using REST:
 
 * :ref:`nrf_cloud_rest_fota`
 * :ref:`nrf_cloud_rest_device_message`
-* :ref:`nrf_cloud_rest_cell_pos_sample`
+* :ref:`nrf_cloud_rest_cell_location`
 
 Other related samples and applications that use nRF Cloud services:
 

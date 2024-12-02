@@ -27,7 +27,7 @@
 /.vscode/                                 @FilipZajdel
 
 # Applications
-/applications/asset_tracker_v2/           @nrfconnect/ncs-cia @coderbyheart
+/applications/asset_tracker_v2/           @nrfconnect/ncs-cia
 /applications/connectivity_bridge/        @nrfconnect/ncs-cia @nordic-auko
 /applications/ipc_radio/                  @nrfconnect/ncs-si-muffin
 /applications/machine_learning/           @nrfconnect/ncs-si-muffin
@@ -55,7 +55,9 @@
 /boards/nordic/nrf52*                     @nrfconnect/ncs-co-boards @nrfconnect/ncs-si-bluebagel
 /boards/nordic/thingy91*                  @nrfconnect/ncs-co-boards @nrfconnect/ncs-cia
 /boards/shields/coverage_support/         @nrfconnect/ncs-low-level-test
-
+/boards/shields/nrf2220ek/                @nrfconnect/ncs-radio-sw
+/boards/shields/nrf2240ek/                @nrfconnect/ncs-radio-sw
+/boards/shields/nrf21540ek/               @nrfconnect/ncs-radio-sw
 /boards/shields/pca63566/doc/*.rst        @nrfconnect/ncs-doc-leads
 
 # SUIT configuration files
@@ -83,9 +85,8 @@
 /doc/nrf/app_dev/device_guides/nrf91/     @nrfconnect/ncs-modem-doc
 /doc/nrf/app_dev/device_guides/nrf91/nrf91_snippet.rst @nrfconnect/ncs-cia-doc
 /doc/nrf/app_dev/device_guides/pmic/      @nrfconnect/ncs-pmic-doc
-/doc/nrf/app_dev/device_guides/working_with_nrf/nrf54h/ @FrancescoSer
-/doc/nrf/app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_*.rst @nrfconnect/ncs-charon-doc
-/doc/nrf/app_dev/device_guides/nrf54h.rst @FrancescoSer
+/doc/nrf/app_dev/device_guides/nrf54h/ @FrancescoSer
+/doc/nrf/app_dev/device_guides/nrf54h/ug_nrf54h20_suit_*.rst @nrfconnect/ncs-charon-doc
 /doc/nrf/app_dev/device_guides/wifi_coex.rst @nrfconnect/ncs-doc-leads
 /doc/nrf/dev_model_and_contributions/     @nrfconnect/ncs-doc-leads @nrfconnect/ncs-vestavind-doc
 /doc/nrf/drivers/bh1749.rst               @nrfconnect/ncs-cia-doc
@@ -98,7 +99,7 @@
 /doc/nrf/drivers/sensor_sim.rst           @nrfconnect/ncs-si-muffin-doc
 /doc/nrf/drivers/sensor_stub.rst          @nrfconnect/ncs-si-muffin-doc
 /doc/nrf/drivers/uart_ipc.rst             @nrfconnect/ncs-doc-leads
-/doc/nrf/drivers/wifi/                    @sachinthegreen @krish2718
+/doc/nrf/drivers/wifi/*.rst               @nrfconnect/ncs-wifi-doc
 /doc/nrf/drivers/wifi.rst                 @nrfconnect/ncs-wifi-doc
 /doc/nrf/drivers/uart_nrf_sw_lpuart.rst   @nrfconnect/ncs-doc-leads
 /doc/nrf/external_comp/avsystem.rst       @nrfconnect/ncs-iot-oulu-tampere-doc
@@ -117,12 +118,12 @@
 /doc/nrf/installation/                    @nrfconnect/ncs-doc-leads @nrfconnect/ncs-vestavind-doc @nrfconnect/ncs-wayland-doc
 /doc/nrf/libraries/bin/                   @nrfconnect/ncs-doc-leads
 /doc/nrf/libraries/bin/lwm2m_carrier/     @nrfconnect/ncs-carrier-doc
-/doc/nrf/libraries/bluetooth_services/    @nrfconnect/ncs-si-muffin-doc @nrfconnect/ncs-dragoon-doc
-/doc/nrf/libraries/bluetooth_services/mesh/ @nrfconnect/ncs-paladin-doc
-/doc/nrf/libraries/bluetooth_services/adv_prov.rst @nrfconnect/ncs-si-bluebagel-doc
-/doc/nrf/libraries/bluetooth_services/mesh.rst @nrfconnect/ncs-paladin-doc
-/doc/nrf/libraries/bluetooth_services/services/fast_pair.rst @nrfconnect/ncs-si-bluebagel-doc
-/doc/nrf/libraries/bluetooth_services/services/wifi_prov.rst @nrfconnect/ncs-wifi-doc
+/doc/nrf/libraries/bluetooth/    @nrfconnect/ncs-si-muffin-doc @nrfconnect/ncs-dragoon-doc
+/doc/nrf/libraries/bluetooth/mesh/ @nrfconnect/ncs-paladin-doc
+/doc/nrf/libraries/bluetooth/adv_prov.rst @nrfconnect/ncs-si-bluebagel-doc
+/doc/nrf/libraries/bluetooth/mesh.rst @nrfconnect/ncs-paladin-doc
+/doc/nrf/libraries/bluetooth/services/fast_pair.rst @nrfconnect/ncs-si-bluebagel-doc
+/doc/nrf/libraries/bluetooth/services/wifi_prov.rst @nrfconnect/ncs-wifi-doc
 /doc/nrf/libraries/caf/                   @nrfconnect/ncs-si-muffin-doc @nrfconnect/ncs-si-bluebagel-doc
 /doc/nrf/libraries/debug/cpu_load.rst     @nrfconnect/ncs-doc-leads
 /doc/nrf/libraries/debug/etb_trace.rst    @nrfconnect/ncs-cia-doc
@@ -169,6 +170,7 @@
 /doc/nrf/libraries/networking/nrf_cloud.rst @nrfconnect/ncs-nrf-cloud-doc
 /doc/nrf/libraries/networking/nrf_cloud_*.rst @nrfconnect/ncs-nrf-cloud-doc
 /doc/nrf/libraries/networking/nrf_provisioning.rst @nrfconnect/ncs-iot-oulu-tampere-doc
+/doc/nrf/libraries/networking/ot_rpc.rst @nrfconnect/ncs-terahertz-doc @nrfconnect/ncs-protocols-serialization
 /doc/nrf/libraries/networking/rest_client.rst @nrfconnect/ncs-iot-positioning-doc
 /doc/nrf/libraries/networking/softap_wifi_provision.rst @nrfconnect/ncs-cia-doc
 /doc/nrf/libraries/networking/wifi_credentials.rst @nrfconnect/ncs-cia-doc
@@ -268,12 +270,11 @@
 /doc/nrf/templates/                       @nrfconnect/ncs-doc-leads
 /doc/nrf/test_and_optimize/               @nrfconnect/ncs-doc-leads
 /doc/nrf/test_and_optimize/optimizing/power_nrf91.rst @nrfconnect/ncs-cia-doc
-/doc/nrf/warnings.txt                     @nrfconnect/ncs-co-doc
 /doc/wifi/                                @sachinthegreen @krish2718
 
 /doc/**/*.svg                             @nrfconnect/ncs-doc-leads
 /doc/**/*.png                             @nrfconnect/ncs-doc-leads
-
+/doc/**/*.webp                            @nrfconnect/ncs-doc-leads
 
 # Drivers
 /drivers/bluetooth/                       @nrfconnect/ncs-co-drivers @nrfconnect/ncs-dragoon
@@ -324,7 +325,7 @@
 /include/mgmt/                            @nrfconnect/ncs-pluto
 /include/modem/                           @nrfconnect/ncs-modem
 /include/mpsl/                            @nrfconnect/ncs-dragoon
-/include/net/azure_*                      @nrfconnect/ncs-cia @coderbyheart
+/include/net/azure_*                      @nrfconnect/ncs-cia
 /include/net/nrf_cloud_*                  @nrfconnect/ncs-nrf-cloud
 /include/net/wifi_credentials.h           @nrfconnect/ncs-cia
 /include/nfc/                             @nrfconnect/ncs-co-drivers @nrfconnect/ncs-si-muffin
@@ -367,7 +368,7 @@
 /lib/location/                            @trantanen @jhirsi @tokangas
 /lib/lte_link_control/                    @tokangas @trantanen @jhirsi @nrfconnect/ncs-modem
 /lib/modem_antenna/                       @tokangas @nrfconnect/ncs-modem
-/lib/modem_attest_token/                  @jayteemo
+/lib/modem_attest_token/                  @nrfconnect/ncs-modem
 /lib/modem_battery/                       @nrfconnect/ncs-modem
 /lib/modem_info/                          @nrfconnect/ncs-co-networking @nrfconnect/ncs-modem
 /lib/modem_jwt/                           @nrfconnect/ncs-iot-oulu @nrfconnect/ncs-modem
@@ -390,11 +391,11 @@
 /lib/wave_gen/                            @nrfconnect/ncs-si-muffin
 
 # Modules
-/modules/azure-sdk-for-c/                 @nrfconnect/ncs-cia @plskeggs
-/modules/cjson/                           @nrfconnect/ncs-cia @plskeggs
+/modules/azure-sdk-for-c/                 @nrfconnect/ncs-cia
+/modules/cjson/                           @nrfconnect/ncs-cia @nrfconnect/ncs-nrf-cloud
 /modules/coremark/                        @nrfconnect/ncs-si-bluebagel
 /modules/mcuboot/                         @nrfconnect/ncs-pluto
-/modules/memfault-firmware-sdk/           @nrfconnect/ncs-cia @plskeggs
+/modules/memfault-firmware-sdk/           @nrfconnect/ncs-cia
 /modules/nrfxlib/                         @nrfconnect/ncs-code-owners
 /modules/trusted-firmware-m/              @nrfconnect/ncs-aegir
 /modules/wfa-qt/                          @nrfconnect/ncs-wifi
@@ -412,6 +413,8 @@
 /samples/bluetooth/central_nfc_pairing/   @nrfconnect/ncs-si-muffin
 /samples/bluetooth/central_smp_client/    @nrfconnect/ncs-si-muffin
 /samples/bluetooth/central_uart/          @nrfconnect/ncs-si-muffin
+/samples/bluetooth/channel_sounding_ras_initiator/ @nrfconnect/ncs-dragoon
+/samples/bluetooth/channel_sounding_ras_reflector/ @nrfconnect/ncs-dragoon
 /samples/bluetooth/conn_time_sync/        @nrfconnect/ncs-dragoon
 /samples/bluetooth/direction_finding_central/ @nrfconnect/ncs-dragoon
 /samples/bluetooth/direction_finding_connectionless_rx/ @nrfconnect/ncs-dragoon
@@ -526,6 +529,7 @@
 /samples/benchmarks/coremark/*.rst        @nrfconnect/ncs-si-bluebagel-doc
 /samples/bluetooth/**/*.rst               @nrfconnect/ncs-dragoon-doc @nrfconnect/ncs-si-muffin-doc
 /samples/bluetooth/nrf_auraconfig/*.rst   @nrfconnect/ncs-audio-doc
+/samples/bluetooth/*_hids*/*.rst          @nrfconnect/ncs-si-bluebagel-doc
 /samples/bluetooth/fast_pair/**/*.rst     @nrfconnect/ncs-si-bluebagel-doc
 /samples/bluetooth/mesh/**/*.rst          @nrfconnect/ncs-paladin-doc
 /samples/bootloader/*.rst                 @nrfconnect/ncs-pluto-doc
@@ -595,7 +599,7 @@
 /scripts/ncs-toolchain-version-minimum.txt @nrfconnect/ncs-co-build-system @nrfconnect/ncs-ci
 /scripts/tools-versions-*.txt             @nrfconnect/ncs-co-build-system @nrfconnect/ncs-ci
 /scripts/requirements-*.txt               @nrfconnect/ncs-co-build-system @nrfconnect/ncs-ci
-/scripts/west_commands/genboard/          @gmarull
+/scripts/west_commands/create_board/      @gmarull
 /scripts/west_commands/sbom/              @nrfconnect/ncs-si-muffin
 /scripts/west_commands/thingy91x_dfu.py   @nrfconnect/ncs-cia
 /scripts/west_commands/ncs-provision.py   @nrfconnect/ncs-pluto
@@ -671,8 +675,8 @@
 /subsys/mpsl/fem/                         @ankuns @martintv
 /subsys/net/                              @nrfconnect/ncs-co-networking
 /subsys/net/lib/mqtt_helper/              @nrfconnect/ncs-cia
-/subsys/net/lib/azure_*                   @nrfconnect/ncs-cia @coderbyheart
-/subsys/net/lib/aws_*                     @nrfconnect/ncs-cia @coderbyheart
+/subsys/net/lib/azure_*                   @nrfconnect/ncs-cia
+/subsys/net/lib/aws_*                     @nrfconnect/ncs-cia
 /subsys/net/lib/ftp_client/               @nrfconnect/ncs-iot-oulu
 /subsys/net/lib/icalendar_parser/         @lats1980
 /subsys/net/lib/lwm2m_client_utils/       @nrfconnect/ncs-co-networking @nrfconnect/ncs-iot-oulu
@@ -713,10 +717,10 @@
 /tests/benchmarks/multicore/idle/         @adamkondraciuk @nrfconnect/ncs-low-level-test
 /tests/benchmarks/multicore/idle_gpio/    @adamkondraciuk @nrfconnect/ncs-low-level-test
 /tests/bluetooth/iso/                     @nrfconnect/ncs-audio @Frodevan
+/tests/bluetooth/bsim/nrf_auraconfig/     @nrfconnect/ncs-audio
 /tests/bluetooth/tester/                  @carlescufi @nrfconnect/ncs-paladin
 /tests/crypto/                            @stephen-nordic @magnev
-/tests/drivers/gpio/egpio_basic_api/      @nrfconnect/ncs-ll-ursus
-/tests/drivers/gpio/gpio_more_loops/      @nrfconnect/ncs-low-level-test
+/tests/drivers/gpio/                      @nrfconnect/ncs-low-level-test @nrfconnect/ncs-ll-ursus
 /tests/drivers/flash/flash_rpc/           @nrfconnect/ncs-pluto
 /tests/drivers/flash_patch/               @nrfconnect/ncs-pluto
 /tests/drivers/fprotect/                  @nrfconnect/ncs-pluto
@@ -797,7 +801,7 @@
 
 /tests/benchmarks/multicore/idle/*.rst    @nrfconnect/ncs-si-bluebagel-doc
 /tests/benchmarks/multicore/idle_gpio/*.rst @nrfconnect/ncs-si-bluebagel-doc
-/tests/benchmarks/multicore/idle_with_pwm/*.rst @nrfconnect/ncs-si-bluebagel-doc
+/tests/benchmarks/multicore/idle_pwm_led/*.rst @nrfconnect/ncs-si-bluebagel-doc
 
 # CI specific west
 /test-manifests/99-default-test-nrf.yml   @nrfconnect/ncs-ci

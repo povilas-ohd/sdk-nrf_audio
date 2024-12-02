@@ -44,7 +44,7 @@ static void assert_rad_purged(void)
 				   SUIT_STORAGE_RAD_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 }
 
-ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_populated_storage)
+ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_storage_purge_populated_storage)
 {
 	suit_plat_mreg_t update_candidate[1] = {{
 		.mem = (uint8_t *)0xCAFEFECA,
@@ -103,7 +103,7 @@ ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_populated_storage)
 	assert_only_nordic_classes();
 }
 
-ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_populated_storage_rad_first)
+ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_storage_purge_populated_storage_rad_first)
 {
 	suit_plat_mreg_t update_candidate[1] = {{
 		.mem = (uint8_t *)0xCAFEFECA,
@@ -167,13 +167,15 @@ ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_populated_storage_rad_firs
 	}
 
 	/* ... and the NVVs are still present */
-	uint32_t constants[SUIT_STORAGE_NVV_N_VARS] = {
-		0x00000000, 0xAAAAAAAA, 0x55AA55AA, 0x01000000,
-		0x00000001, 0xFFFFFFFF, 0x98EFCDAB, 0xFFFFFFFF,
+	uint8_t constants[SUIT_STORAGE_NVV_N_VARS] = {
+		0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA,
+		0xAA, 0x55, 0xAA, 0x55, 0x00, 0x00, 0x00, 0x01,
+		0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xAB, 0xCD, 0xEF, 0x98, 0xFF, 0xFF, 0xFF, 0xFF,
 	};
 
 	for (size_t i = 0; i < SUIT_STORAGE_NVV_N_VARS; i++) {
-		uint32_t value;
+		uint8_t value;
 
 		/* WHEN the NVV value is read */
 		err = suit_storage_var_get(i, &value);
@@ -201,7 +203,7 @@ ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_populated_storage_rad_firs
 	assert_only_nordic_classes();
 }
 
-ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_empty_storage)
+ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_storage_purge_empty_storage)
 {
 	/* GIVEN storage area is not initialized */
 	erase_area_nordic();
@@ -234,7 +236,7 @@ ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_empty_storage)
 	assert_only_nordic_classes();
 }
 
-ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_update_only)
+ZTEST(suit_storage_nrf54h20_bare_recovery_tests, test_storage_purge_update_only)
 {
 	suit_plat_mreg_t update_candidate[1] = {{
 		.mem = (uint8_t *)0xCAFEFECA,

@@ -46,8 +46,11 @@ void dect_phy_ctrl_status_get_n_print(void);
 
 int dect_phy_ctrl_rx_start(struct dect_phy_rx_cmd_params *params, bool restart);
 void dect_phy_ctrl_rx_stop(void);
+bool dect_phy_ctrl_rx_is_ongoing(void);
 
 int dect_phy_ctrl_time_query(void);
+
+int dect_phy_ctrl_modem_temperature_get(void);
 
 /******************************************************************************/
 
@@ -77,8 +80,8 @@ void dect_phy_ctrl_ping_cmd_stop(void);
 
 /******************************************************************************/
 
-int dect_phy_ctrl_cert_cmd(struct dect_phy_rf_tool_params *params);
-void dect_phy_ctrl_cert_cmd_stop(void);
+int dect_phy_ctrl_rf_tool_cmd(struct dect_phy_rf_tool_params *params);
+void dect_phy_ctrl_rf_tool_cmd_stop(void);
 
 /******************************************************************************/
 

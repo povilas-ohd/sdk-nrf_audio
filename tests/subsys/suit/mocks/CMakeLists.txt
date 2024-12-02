@@ -5,4 +5,4 @@
 #
 
 add_subdirectory_ifdef(CONFIG_MOCK_NRFX nrfx)
-add_subdirectory_ifdef(CONFIG_MOCK_SDFW_ARBITER sdfw)
+add_subdirectory_ifdef(CONFIG_MOCK_SDFW sdfw)

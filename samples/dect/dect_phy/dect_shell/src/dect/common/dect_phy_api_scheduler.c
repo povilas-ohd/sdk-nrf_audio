@@ -70,7 +70,7 @@ static struct dect_phy_api_scheduler_list_item *
 dect_phy_api_scheduler_done_list_item_add(struct dect_phy_api_scheduler_list_item *new_list_item);
 
 static struct dect_phy_api_scheduler_list_item *
-dect_phy_api_scheduler_done_list_item_find_by_phy_handle(uint16_t handle);
+dect_phy_api_scheduler_done_list_item_find_by_phy_handle(uint32_t handle);
 static void dect_phy_api_scheduler_done_list_item_remove_n_dealloc_by_item(
 	struct dect_phy_api_scheduler_list_item *list_item);
 static void dect_phy_api_scheduler_done_list_purge(void);
@@ -257,7 +257,7 @@ bool dect_phy_api_scheduler_list_item_remove_by_item(struct dect_phy_api_schedul
 }
 
 struct dect_phy_api_scheduler_list_item *
-dect_phy_api_scheduler_list_item_remove_by_phy_op_handle(uint16_t handle)
+dect_phy_api_scheduler_list_item_remove_by_phy_op_handle(uint32_t handle)
 {
 	struct dect_phy_api_scheduler_list_item *iterator = NULL;
 	bool found = false;
@@ -279,14 +279,31 @@ dect_phy_api_scheduler_list_item_remove_by_phy_op_handle(uint16_t handle)
 	return iterator;
 }
 
-void dect_phy_api_scheduler_th_list_item_remove_dealloc_by_phy_op_handle(uint16_t handle)
+bool dect_phy_api_scheduler_list_item_running_by_phy_op_handle(uint32_t handle)
+{
+	struct dect_phy_api_scheduler_list_item *iterator = NULL;
+	bool found = false;
+
+	k_mutex_lock(&to_be_sheduled_list_mutex, K_FOREVER);
+	SYS_DLIST_FOR_EACH_CONTAINER(&to_be_sheduled_list, iterator, dnode) {
+		if (iterator->phy_op_handle == handle) {
+			found = true;
+			break;
+		}
+	}
+
+	k_mutex_unlock(&to_be_sheduled_list_mutex);
+	return found;
+}
+
+void dect_phy_api_scheduler_th_list_item_remove_dealloc_by_phy_op_handle(uint32_t handle)
 {
 	(void)dect_phy_api_scheduler_raise_event_with_data(
 		DECT_PHY_API_EVENT_SCHEDULER_OP_LIST_ITEM_RM_DEALLOC, (void *)&handle,
-		sizeof(uint16_t));
+		sizeof(uint32_t));
 }
 
-void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(uint16_t handle)
+void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(uint32_t handle)
 {
 	struct dect_phy_api_scheduler_list_item *iterator = NULL;
 
@@ -294,8 +311,8 @@ void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(uint16_t h
 	dect_phy_api_scheduler_list_item_dealloc(iterator);
 }
 
-void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle_range(uint16_t range_start,
-									    uint16_t range_end)
+void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle_range(uint32_t range_start,
+									    uint32_t range_end)
 {
 	for (int i = range_start; i <= range_end; i++) {
 		dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(i);
@@ -303,7 +320,7 @@ void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle_range(uint
 }
 
 void dect_phy_api_scheduler_list_item_pdu_payload_update_by_phy_handle(
-	uint16_t handle, uint8_t *new_encoded_payload_pdu, uint16_t size)
+	uint32_t handle, uint8_t *new_encoded_payload_pdu, uint16_t size)
 {
 	struct dect_phy_api_scheduler_list_item *iterator = NULL;
 	bool found = false;
@@ -333,7 +350,7 @@ void dect_phy_api_scheduler_list_item_pdu_payload_update_by_phy_handle(
 }
 
 void dect_phy_api_scheduler_list_item_tx_phy_header_update_by_phy_handle(
-	uint16_t handle, union nrf_modem_dect_phy_hdr *phy_header,
+	uint32_t handle, union nrf_modem_dect_phy_hdr *phy_header,
 	dect_phy_header_type_t header_type)
 {
 	struct dect_phy_api_scheduler_list_item *iterator = NULL;
@@ -364,7 +381,7 @@ void dect_phy_api_scheduler_list_item_tx_phy_header_update_by_phy_handle(
 }
 
 void dect_phy_api_scheduler_list_item_beacon_tx_sched_config_update_by_phy_op_handle(
-	uint16_t handle, struct dect_phy_api_scheduler_list_item_config *tx_conf)
+	uint32_t handle, struct dect_phy_api_scheduler_list_item_config *tx_conf)
 {
 	struct dect_phy_api_scheduler_list_item *iterator = NULL;
 	bool found = false;
@@ -397,6 +414,26 @@ void dect_phy_api_scheduler_list_item_beacon_tx_sched_config_update_by_phy_op_ha
 		/* Beacon: type 1 */
 		memcpy(&iterator->sched_config.tx.phy_header.type_1,
 		       &(tx_conf->tx.phy_header.type_1), sizeof(phy_header.type_1));
+	}
+	k_mutex_unlock(&to_be_sheduled_list_mutex);
+}
+
+void dect_phy_api_scheduler_list_item_sched_config_frame_time_update_by_phy_op_handle(
+	uint32_t handle, int64_t frame_time_diff)
+{
+	struct dect_phy_api_scheduler_list_item *iterator = NULL;
+	bool found = false;
+
+	k_mutex_lock(&to_be_sheduled_list_mutex, K_FOREVER);
+	SYS_DLIST_FOR_EACH_CONTAINER(&to_be_sheduled_list, iterator, dnode) {
+		if (iterator->phy_op_handle == handle) {
+			found = true;
+			break;
+		}
+	}
+
+	if (found) {
+		iterator->sched_config.frame_time += (frame_time_diff);
 	}
 	k_mutex_unlock(&to_be_sheduled_list_mutex);
 }
@@ -753,12 +790,13 @@ void dect_phy_api_scheduler_list_status_print(void)
 	}
 	SYS_DLIST_FOR_EACH_CONTAINER(&done_sheduled_list, iterator, dnode) {
 		done_count++;
+		desh_print("  Done list item phy handle: %d", iterator->phy_op_handle);
 	}
 
-	printk("Scheduler list status:\n");
-	printk("  List item count: %d\n", count);
-	printk("Scheduler done list status:\n");
-	printk("  List item count: %d\n", done_count);
+	desh_print("Scheduler list status:");
+	desh_print("  List item count: %d", count);
+	desh_print("Scheduler done list status:");
+	desh_print("  List item count: %d", done_count);
 }
 
 /**************************************************************************************************/
@@ -834,7 +872,7 @@ bool dect_phy_api_scheduler_done_list_is_empty(void)
 }
 
 static struct dect_phy_api_scheduler_list_item *
-dect_phy_api_scheduler_done_list_item_find_by_phy_handle(uint16_t handle)
+dect_phy_api_scheduler_done_list_item_find_by_phy_handle(uint32_t handle)
 {
 	struct dect_phy_api_scheduler_list_item *iterator = NULL;
 
@@ -863,7 +901,7 @@ static void dect_phy_api_scheduler_done_list_items_stop_in_modem(void)
 }
 
 static void dect_phy_api_scheduler_done_list_mdm_op_complete(
-	struct dect_phy_api_scheduler_op_completed_params *params,
+	struct dect_phy_common_op_completed_params *params,
 	struct dect_phy_api_scheduler_list_item *list_item)
 {
 	struct dect_phy_api_scheduler_list_item *found = list_item;
@@ -895,7 +933,8 @@ static void dect_phy_api_scheduler_done_list_mdm_op_complete(
 		}
 		if (found->sched_config.cb_op_completed) {
 			found->sched_config.cb_op_completed(
-				params->time, found->sched_config.frame_time, params->status);
+				params,
+				found->sched_config.frame_time);
 		}
 		if (found->sched_config.cb_op_completed_with_count) {
 			if (found->sched_config.interval_count_left == 0) {
@@ -928,12 +967,11 @@ int dect_phy_api_scheduler_next_frame(void)
 /**************************************************************************************************/
 
 int dect_phy_api_scheduler_mdm_op_completed(
-	struct dect_phy_api_scheduler_op_completed_params *params)
+	struct dect_phy_common_op_completed_params *params)
 {
 	int ret = dect_phy_api_scheduler_raise_event_with_data(
 		DECT_PHY_API_EVENT_SCHEDULER_OP_COMPLETED, (void *)params,
-		sizeof(struct dect_phy_api_scheduler_op_completed_params));
-
+		sizeof(struct dect_phy_common_op_completed_params));
 	return ret;
 }
 
@@ -1115,6 +1153,7 @@ static void dect_phy_api_scheduler_core_tick_th_schedule_next_frame(void)
 	bool add_item_to_done_list = false;
 	bool we_need_tx_data_in_done_list = false;
 	uint16_t op_count_trials_to_mdm = 0;
+	struct dect_phy_common_op_completed_params sched_op_completed_params;
 
 	k_mutex_lock(&to_be_sheduled_list_mutex, K_FOREVER);
 
@@ -1124,22 +1163,24 @@ static void dect_phy_api_scheduler_core_tick_th_schedule_next_frame(void)
 		int64_t time_to_frame = frame_time - time_now;
 
 		if (time_to_frame < 0) {
-			struct dect_phy_api_scheduler_op_completed_params sched_op_completed_params;
 
 			ret = DECT_SCHEDULER_DELAYED_ERROR;
+			sched_op_completed_params.handle = iterator->phy_op_handle;
+			sched_op_completed_params.time = time_now;
+			sched_op_completed_params.temperature =
+				NRF_MODEM_DECT_PHY_TEMP_NOT_MEASURED;
+			sched_op_completed_params.status = ret;
+
 			if (iterator->sched_config.cb_op_to_mdm) {
 				iterator->sched_config.cb_op_to_mdm(
-					time_now, iterator->sched_config.frame_time, ret);
+					&sched_op_completed_params,
+					iterator->sched_config.frame_time);
 			}
 
 			if (iterator->sched_config.cb_op_completed) {
 				/* Complete item */
 
 				/* Trigger callback also */
-				sched_op_completed_params.handle = iterator->phy_op_handle;
-				sched_op_completed_params.time = time_now;
-				sched_op_completed_params.status = ret;
-
 				dect_phy_api_scheduler_done_list_mdm_op_complete(
 					&sched_op_completed_params, iterator);
 
@@ -1153,11 +1194,6 @@ static void dect_phy_api_scheduler_core_tick_th_schedule_next_frame(void)
 					iterator->sched_config.interval_mdm_ticks = 0;
 
 					if (iterator->sched_config.cb_op_completed_with_count) {
-						sched_op_completed_params.handle =
-							iterator->phy_op_handle;
-						sched_op_completed_params.status = ret;
-						sched_op_completed_params.time = time_now;
-
 						dect_phy_api_scheduler_done_list_mdm_op_complete(
 							&sched_op_completed_params, iterator);
 					}
@@ -1235,8 +1271,15 @@ static void dect_phy_api_scheduler_core_tick_th_schedule_next_frame(void)
 			/**************************************************************************/
 
 			if (iterator->sched_config.cb_op_to_mdm) {
+				sched_op_completed_params.handle = iterator->phy_op_handle;
+				sched_op_completed_params.time = start_time;
+				sched_op_completed_params.temperature =
+					NRF_MODEM_DECT_PHY_TEMP_NOT_MEASURED;
+				sched_op_completed_params.status = ret;
+
 				iterator->sched_config.cb_op_to_mdm(
-					start_time, iterator->sched_config.frame_time, ret);
+					&sched_op_completed_params,
+					iterator->sched_config.frame_time);
 			}
 
 			/**************************************************************************/
@@ -1348,12 +1391,11 @@ static void dect_phy_api_scheduler_core_tick_th_schedule_next_frame(void)
 			/**************************************************************************/
 
 			if (ret) {
-				struct dect_phy_api_scheduler_op_completed_params
-					sched_op_completed_params;
-
 				sched_op_completed_params.handle = iterator->phy_op_handle;
 				sched_op_completed_params.status = 0;
 				sched_op_completed_params.time = time_now;
+				sched_op_completed_params.temperature =
+					NRF_MODEM_DECT_PHY_TEMP_NOT_MEASURED;
 
 				if (ret != -EAGAIN) { /* EAGAIN is when scheduler suspended */
 					/* phy op failed, complete right away */
@@ -1424,8 +1466,8 @@ static void dect_phy_api_scheduler_th_handler(void)
 		}
 #endif
 		case DECT_PHY_API_EVENT_SCHEDULER_OP_COMPLETED: {
-			struct dect_phy_api_scheduler_op_completed_params *params =
-				(struct dect_phy_api_scheduler_op_completed_params *)event.data;
+			struct dect_phy_common_op_completed_params *params =
+				(struct dect_phy_common_op_completed_params *)event.data;
 
 			dect_phy_api_scheduler_done_list_mdm_op_complete(params, NULL);
 			break;
@@ -1450,7 +1492,7 @@ static void dect_phy_api_scheduler_th_handler(void)
 			break;
 		}
 		case DECT_PHY_API_EVENT_SCHEDULER_OP_LIST_ITEM_RM_DEALLOC: {
-			uint16_t *phy_handle = (uint16_t *)event.data;
+			uint32_t *phy_handle = (uint32_t *)event.data;
 
 			dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(
 				*phy_handle);

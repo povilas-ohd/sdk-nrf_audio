@@ -25,6 +25,7 @@
 #include "dect_phy_mac_common.h"
 #include "dect_phy_mac_cluster_beacon.h"
 #include "dect_phy_mac_nbr.h"
+#include "dect_phy_mac_client.h"
 #include "dect_phy_mac_ctrl.h"
 
 /**************************************************************************************************/
@@ -55,7 +56,8 @@ static const char dect_phy_mac_beacon_scan_usage_str[] =
 	"Options:\n"
 	"  -c <integer>,                        Channel nbr to be scanned for a beacon.\n"
 	"                                       Ranges: band #1: 1657-1677, band #2 1680-1700,\n"
-	"                                       band #9 1691-1711. Zero value: all in a set band.\n"
+	"                                       band #4 524-552, band #9 1703-1711,\n"
+	"                                       band #22 1691-1711. Zero value: all in a set band.\n"
 	"                                       Default: 1665.\n"
 	"  -t, --scan_time <integer>,           Scanning duration in seconds (default: 4 "
 	"seconds).\n"
@@ -186,7 +188,8 @@ static const char dect_phy_mac_beacon_start_cmd_usage_str[] =
 	"Options:\n"
 	"  -c <integer>,               Used channel for a beacon.\n"
 	"                              Ranges: band #1: 1657-1677 (only odd numbers),\n"
-	"                              band #2 1680-1700, band #9 1691-1711.\n"
+	"                              band #2 1680-1700, band #4 524-552, band #9 1703-1711,\n"
+	"                              band #22 1691-1711.\n"
 	"                              Default: 0, i.e. automatic selection of\n"
 	"                              free/possible channel on a set band.\n"
 	"  -p, --tx_pwr <dbm>,         Set beacon broadcast power (dBm), default: -16.\n"
@@ -273,7 +276,7 @@ static const char dect_phy_mac_associate_cmd_usage_str[] =
 	"  -m, --tx_mcs <integer>, TX MCS (integer). Default: 0.\n"
 	"Note: LBT (Listen Before Talk) is enabled as a default for a min period,\n"
 	"      but the LBT max RSSI threshold can be configured in settings\n"
-	"      (dect sett ----rssi_scan_busy_th <dbm>).\n";
+	"      (dect sett --rssi_scan_busy_th <dbm>).\n";
 
 /* Specifying the expected options (both long and short): */
 static struct option long_options_associate[] = {{"tx_pwr", required_argument, 0, 'p'},
@@ -356,7 +359,7 @@ static const char dect_phy_mac_dissociate_cmd_usage_str[] =
 	"  -m, --tx_mcs <integer>, TX MCS (integer). Default: 0.\n"
 	"Note: LBT (Listen Before Talk) is enabled as a default for a min period,\n"
 	"      but the LBT max RSSI threshold can be configured in settings\n"
-	"      (dect sett ----rssi_scan_busy_th <dbm>).\n";
+	"      (dect sett --rssi_scan_busy_th <dbm>).\n";
 
 /* Specifying the expected options (both long and short): */
 static struct option long_options_dissociate[] = {
@@ -416,8 +419,9 @@ static int dect_phy_mac_dissociate_cmd(const struct shell *shell, size_t argc, c
 
 	ret = dect_phy_mac_ctrl_dissociate(&params);
 	if (ret) {
-		desh_error("Cannot send association to FT %u's random access resource, err %d",
-			   params.target_long_rd_id, ret);
+		desh_error("Cannot send association release to FT %u's random access resource, "
+			   "err %d",
+				params.target_long_rd_id, ret);
 	} else {
 		desh_print("Association Release TX started.");
 	}
@@ -431,21 +435,29 @@ show_usage:
 /**************************************************************************************************/
 
 static const char dect_phy_mac_rach_tx_cmd_usage_str[] =
-	"Usage: dect mac rach_tx <c_data> [<options>]\n"
+	"Usage: dect mac rach_tx [stop] | -d <data> [<options>]\n"
 	"Options:\n"
 	"  -d, --data <data_str>,  Data to be sent.\n"
-	"  -p, --tx_pwr <integer>, TX power (dBm) (default 0 dBm)\n"
+	"  -p, --tx_pwr <integer>, TX power (dBm). Default: 0 dBm.\n"
 	"  -m, --tx_mcs <integer>, TX MCS (integer). Default: 0.\n"
-	"  -t, --long_rd_id <id>,  Target long rd id (default: 38).\n"
+	"  -t, --long_rd_id <id>,  Target long rd id. Default: 38.\n"
+	"  -i, --interval <interval_secs>, Data sending interval in seconds.\n"
+	"                                  Default: 0, data sent only once.\n"
+	"  -j, --get_mdm_temp,             Include modem temperature in the payload. The payload\n"
+	"                                  is encoded in JSON.\n"
 	"Note: LBT (Listen Before Talk) is enabled as a default for a min period,\n"
 	"      but the LBT max RSSI threshold can be configured in settings\n"
-	"      (dect sett ----rssi_scan_busy_th <dbm>).\n";
+	"      (dect sett --rssi_scan_busy_th <dbm>).\n";
+
+#define DECT_PHY_MAC_RACH_TX_DATA_JSON_OVERHEAD 30
 
 /* Specifying the expected options (both long and short): */
 static struct option long_options_rach_tx[] = { {"data", required_argument, 0, 'd'},
 						{"tx_pwr", required_argument, 0, 'p'},
 						{"tx_mcs", required_argument, 0, 'm'},
 						{"long_rd_id", required_argument, 0, 't'},
+						{"interval", required_argument, 0, 'i'},
+						{"get_mdm_temp", no_argument, 0, 'j'},
 						{0, 0, 0, 0}};
 
 static int dect_phy_mac_rach_tx_cmd(const struct shell *shell, size_t argc, char **argv)
@@ -458,6 +470,11 @@ static int dect_phy_mac_rach_tx_cmd(const struct shell *shell, size_t argc, char
 	if (argc < 2) {
 		goto show_usage;
 	}
+	if (argv[1] != NULL && !strcmp(argv[1], "stop")) {
+		dect_phy_mac_ctrl_rach_tx_stop();
+		desh_print("rach_tx stopped.");
+		return 0;
+	}
 
 	optreset = 1;
 	optind = 1;
@@ -465,8 +482,10 @@ static int dect_phy_mac_rach_tx_cmd(const struct shell *shell, size_t argc, char
 	params.tx_power_dbm = 0;
 	params.mcs = 0;
 	params.target_long_rd_id = 38;
+	params.interval_secs = 0;
+	params.get_mdm_temp = false;
 
-	while ((opt = getopt_long(argc, argv, "d:p:m:t:h", long_options_rach_tx,
+	while ((opt = getopt_long(argc, argv, "d:p:m:t:i:jh", long_options_rach_tx,
 				  &long_index)) != -1) {
 		switch (opt) {
 		case 't': {
@@ -493,6 +512,19 @@ static int dect_phy_mac_rach_tx_cmd(const struct shell *shell, size_t argc, char
 			params.mcs = atoi(optarg);
 			break;
 		}
+		case 'i': {
+			params.interval_secs = atoi(optarg);
+			if (params.interval_secs < 0) {
+				desh_error("The interval must be positive.");
+				return -EINVAL;
+			}
+			break;
+		}
+		case 'j': {
+			params.get_mdm_temp = true;
+			break;
+		}
+
 		case 'h':
 			goto show_usage;
 		case '?':
@@ -505,11 +537,18 @@ static int dect_phy_mac_rach_tx_cmd(const struct shell *shell, size_t argc, char
 		desh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
+	if (params.get_mdm_temp &&
+	    ((strlen(params.tx_data_str) + DECT_PHY_MAC_RACH_TX_DATA_JSON_OVERHEAD) >=
+	     (DECT_DATA_MAX_LEN - 1))) {
+		desh_error(
+			"The given data is too long to be encoded into JSON with modem temperature.");
+		goto show_usage;
+	}
 
 	desh_print("Sending data %s to FT %u's random access resource", params.tx_data_str,
 		   params.target_long_rd_id);
 
-	ret = dect_phy_mac_ctrl_rach_tx(&params);
+	ret = dect_phy_mac_ctrl_rach_tx_start(&params);
 	if (ret) {
 		desh_error("Cannot send data %s to FT %u's random access resource, err %d",
 			   params.tx_data_str, params.target_long_rd_id, ret);
@@ -530,6 +569,7 @@ static void dect_phy_mac_status_cmd(const struct shell *shell, size_t argc, char
 	desh_print("dect-phy-mac status:");
 
 	dect_phy_mac_cluster_beacon_status_print();
+	dect_phy_mac_client_status_print();
 	dect_phy_mac_nbr_status_print();
 }
 

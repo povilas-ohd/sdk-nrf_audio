@@ -48,9 +48,6 @@ LTO is an advanced compilation technique that performs optimization across all c
 
 To enable LTO, set the :kconfig:option:`CONFIG_LTO` and :kconfig:option:`CONFIG_ISR_TABLES_LOCAL_DECLARATION` Kconfig options to ``y``.
 
-.. note::
-   Support for Link Time Optimization is experimental.
-
 .. _ug_matter_device_memory_profiling:
 
 Profiling memory in Matter applications
@@ -419,6 +416,10 @@ To use a dynamic heap size on your Matter device, set them both to ``n``.
 
 The static heap size means that you can define the maximum heap size for your application by setting the :kconfig:option:`CONFIG_CHIP_MALLOC_SYS_HEAP_SIZE` Kconfig value.
 You can also adjust the heap dedicated for MbedTLS purposes by setting the :kconfig:option:`CONFIG_MBEDTLS_HEAP_SIZE` Kconfig option value.
+
+.. note::
+   The Thread protocol has a separate configuration for memory allocation.
+   See :ref:`thread_configuring_messagepool` in the Thread documentation for more information.
 
 Memory profiling troubleshooting
 ================================

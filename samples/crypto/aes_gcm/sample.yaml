@@ -41,8 +41,9 @@ tests:
     tags: introduction psa cracen sysbuild ci_samples_crypto
     platform_allow: >
       nrf54l15dk/nrf54l15/cpuapp
-      nrf54l15pdk/nrf54l15/cpuapp
       nrf54l15dk/nrf54l15/cpuapp/ns
+      nrf54l15dk/nrf54l10/cpuapp
+      nrf54l15dk/nrf54l05/cpuapp
     harness: console
     harness_config:
       type: multi_line
@@ -50,8 +51,9 @@ tests:
         - .*Example finished successfully!.*
     integration_platforms:
       - nrf54l15dk/nrf54l15/cpuapp
-      - nrf54l15pdk/nrf54l15/cpuapp
       - nrf54l15dk/nrf54l15/cpuapp/ns
+      - nrf54l15dk/nrf54l10/cpuapp
+      - nrf54l15dk/nrf54l05/cpuapp
   sample.aes_gcm.cracen.crypto_service:
     sysbuild: true
     tags: introduction psa cracen sysbuild crypto ci_samples_crypto

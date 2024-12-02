@@ -40,6 +40,7 @@ static struct dect_phy_mac_cluster_beacon_data {
 
 	dect_phy_mac_cluster_beacon_t last_cluster_beacon_msg;
 	dect_phy_mac_random_access_resource_ie_t last_rach_ie;
+	uint64_t last_tx_frame_time;
 
 	struct dect_phy_mac_beacon_start_params start_params;
 } beacon_data;
@@ -272,6 +273,19 @@ void dect_phy_mac_ctrl_cluster_beacon_phy_api_direct_rssi_cb(
 	}
 }
 
+static void dect_phy_mac_cluster_beacon_to_mdm_cb(
+	struct dect_phy_common_op_completed_params *params, uint64_t frame_time)
+{
+	if (params->status == NRF_MODEM_DECT_PHY_SUCCESS) {
+		beacon_data.last_tx_frame_time = frame_time;
+	}
+}
+
+uint64_t dect_phy_mac_cluster_beacon_last_tx_frame_time_get(void)
+{
+	return beacon_data.last_tx_frame_time;
+}
+
 int dect_phy_mac_cluster_beacon_tx_start(struct dect_phy_mac_beacon_start_params *params)
 {
 
@@ -367,6 +381,7 @@ int dect_phy_mac_cluster_beacon_tx_start(struct dect_phy_mac_beacon_start_params
 		current_settings->common.transmitter_id;
 	sched_list_item_conf->address_info.receiver_long_rd_id = DECT_LONG_RD_ID_BROADCAST;
 
+	sched_list_item_conf->cb_op_to_mdm = dect_phy_mac_cluster_beacon_to_mdm_cb;
 	sched_list_item_conf->cb_op_completed = NULL;
 
 	sched_list_item_conf->channel = params->beacon_channel;
@@ -437,7 +452,8 @@ int dect_phy_mac_cluster_beacon_tx_start(struct dect_phy_mac_beacon_start_params
 		rach_list_item_conf->length_subslots = 0;
 
 		rach_list_item_conf->rx.mode = NRF_MODEM_DECT_PHY_RX_MODE_CONTINUOUS;
-		rach_list_item_conf->rx.expected_rssi_level = 0;
+		rach_list_item_conf->rx.expected_rssi_level =
+			current_settings->rx.expected_rssi_level;
 		rach_list_item_conf->rx.duration =
 			0; /* length_slots used instead duration variable */
 		rach_list_item_conf->rx.network_id = current_settings->common.network_id;
@@ -492,6 +508,11 @@ void dect_phy_mac_cluster_beacon_tx_stop(void)
 {
 	dect_phy_mac_cluster_beacon_scheduler_list_items_remove();
 	beacon_data.running = false;
+}
+
+bool dect_phy_mac_cluster_beacon_is_running(void)
+{
+	return beacon_data.running;
 }
 
 void dect_phy_mac_cluster_beacon_update(void)
@@ -704,4 +725,39 @@ void dect_phy_mac_cluster_beacon_status_print(void)
 		desh_print("  Beacon payload PDU byte count: %d",
 			   beacon_data.encoded_cluster_beacon_pdu_len);
 	}
+}
+
+int64_t dect_phy_mac_cluster_beacon_rcv_time_shift_calculate(
+	dect_phy_mac_cluster_beacon_period_t interval,
+	uint64_t last_rcv_time,
+	uint64_t now_rcv_time)
+{
+	__ASSERT_NO_MSG(last_rcv_time < now_rcv_time);
+
+	uint64_t next_beacon_frame_start, beacon_interval_mdm_ticks, prev_frame_start;
+	uint64_t now_diff_to_prev_frame;
+	uint64_t now_diff_to_next_frame;
+	int64_t diff_out = 0;
+	int32_t beacon_interval_ms = dect_phy_mac_pdu_cluster_beacon_period_in_ms(interval);
+
+	beacon_interval_mdm_ticks = MS_TO_MODEM_TICKS(beacon_interval_ms);
+
+	next_beacon_frame_start = last_rcv_time;
+	while (next_beacon_frame_start < now_rcv_time) {
+		next_beacon_frame_start += beacon_interval_mdm_ticks;
+	}
+	prev_frame_start = next_beacon_frame_start - beacon_interval_mdm_ticks;
+
+	now_diff_to_prev_frame = now_rcv_time - prev_frame_start;
+
+	now_diff_to_next_frame = next_beacon_frame_start - now_rcv_time;
+
+	if (now_diff_to_prev_frame < now_diff_to_next_frame) {
+		/* we have received later than expected */
+		diff_out = now_diff_to_prev_frame;
+	} else {
+		/* we have received earlier than expected */
+		diff_out = -now_diff_to_next_frame;
+	}
+	return diff_out;
 }

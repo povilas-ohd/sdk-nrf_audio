@@ -84,11 +84,16 @@ Examples
 
      dect sett --tx_pwr -16
 
-* Change the default band to ``2`` (has impact when automatic channel selection is used, in other words, the set channel is zero in ``dect rssi_scan`` or in ``dect mac beacon_start`` command):
+* Change the default band to ``2`` (has impact when automatic channel selection is used, in other words, when the set channel is zero in ``dect rssi_scan`` or in ``dect mac beacon_start`` command):
 
   .. code-block:: console
 
      dect sett -b 2
+
+.. caution::
+   There might be region-specific limitations for radio channel usage.
+   See Regulations and Channel frequency sections of the :ref:`nrfxlib:nrf_modem_dect_phy` page for using different DECT NR+ radio bands and channels in different regions.
+   Make sure to always measure the channel with the ``dect rssi_scan`` command before accessing the band.
 
 RSSI measurement
 ================
@@ -618,10 +623,11 @@ Example: starting of cluster beacon and sending RA data to it
       dect-phy-mac status:
       Cluster beacon status:
          Beacon running:                yes
-         Beacon channel:                1665
+         Beacon channel:                1659
          Beacon tx power:               0 dBm
          Beacon interval:               2000 ms
          Beacon payload PDU byte count: 50
+      Client status:
       Neighbor list status:
 
 * FT/Beacon device - Check generated long and short RD IDs from settings:
@@ -639,6 +645,8 @@ Example: starting of cluster beacon and sending RA data to it
 
   .. code-block:: console
 
+      desh:~$ dect sett --reset
+      desh:~$ dect sett -t 1245
       desh:~$ dect mac beacon_scan -c 1659
       -----------------------------------------------------------------------------
       Beacon scan started.
@@ -729,16 +737,19 @@ Example: starting of cluster beacon and sending RA data to it
       desh:~$ dect mac status
       dect-phy-mac status:
       Cluster beacon status:
-      Beacon running: no
+         Beacon running: no
+      Client status:
       Neighbor list status:
-      Neighbor 1:
-         network ID (24bit MSB): 1193046 (0x123456)
-         network ID (8bit LSB):  120 (0x78)
-         network ID (32bit):     305419896 (0x12345678)
-         long RD ID:             1234
-         short RD ID:            27462
-         channel:                1659
-         last seen time:         17016336625
+         Neighbor 1:
+            network ID (24bit MSB): 1193046 (0x123456)
+            network ID (8bit LSB):  120 (0x78)
+            network ID (32bit):     305419896 (0x12345678)
+            long RD ID:             1234
+            short RD ID:            27462
+            channel:                1659
+            Last seen:              12964 msecs ago
+            Background scan status:
+               Running: false
 
 * PT/client side - Send association request to the scanned beacon:
 
@@ -780,6 +791,33 @@ Example: starting of cluster beacon and sending RA data to it
             Payload length: 1
             Received padding data, len 1, payload is not printed
       RX for Association Response completed.
+
+* PT/client side - Check that the client is associated with the device with long RD ID 1234 and a background scan is running:
+
+  .. code-block:: console
+
+      desh:~$ dect mac status
+      dect-phy-mac status:
+      Cluster beacon status:
+         Beacon running: no
+      Client status:
+         Association #1: long RD ID 1234
+      Neighbor list status:
+         Neighbor 1:
+            network ID (24bit MSB): 1193046 (0x123456)
+            network ID (8bit LSB):  120 (0x78)
+            network ID (32bit):     305419896 (0x12345678)
+            long RD ID:             1234
+            short RD ID:            64945
+            channel:                1671
+            Last seen:              1428 msecs ago
+            Last timestamp: 16878096625 mdm ticks
+            Metrics:
+               Scan info updated count:            1
+               Scan started ok count:              1
+               Scan start fail count:              0
+               Scan info time shift updated count: 0
+               Scan info time shift last value:    0
 
 * PT/client side - Send RA data to the scanned beacon:
 
@@ -823,6 +861,18 @@ Example: starting of cluster beacon and sending RA data to it
             IE type: Padding (0 byte)
             Payload length: 0
             Received padding data, len 0, payload is not printed
+
+* PT/client side - Send JSON-formatted periodic RA data in 10-second intervals with the current modem temperature to the scanned beacon:
+
+  .. code-block:: console
+
+      desh:~$ dect mac rach_tx -t 1234 -d "Data from device 1245" -i 10 -j
+
+* PT/client side - Stop periodic RA data sending:
+
+  .. code-block:: console
+
+      desh:~$ dect mac rach_tx stop
 
 * PT/client side - Send association release to the scanned beacon:
 
@@ -868,6 +918,12 @@ Example: starting of cluster beacon and sending RA data to it
             Payload length: 1
             Received padding data, len 1, payload is not printed
 
+* PT/client side - Check that no associations and background scans are running:
+
+  .. code-block:: console
+
+      desh:~$ dect mac status
+
 * FT/Beacon device - Stop the beacon:
 
   .. code-block:: console
@@ -875,6 +931,92 @@ Example: starting of cluster beacon and sending RA data to it
       desh:~$ dect mac beacon_stop
       Stopping beacon.
       Beacon TX stopped, cause: User Initiated.
+
+Example: two devices sending data to each other
+-----------------------------------------------
+
+* FT/Beacon device 1 - Start periodic cluster beacon TX on default band 1 and on the first free channel:
+
+  .. code-block:: console
+
+      desh:~$ dect sett --reset
+      desh:~$ dect sett -t 1
+      desh:~$ dect mac beacon_start
+      ...
+      Channel 1671 was chosen for the beacon.
+      Beacon TX started.
+
+* FT/Beacon device 2 - Scan the beacon from device 1:
+
+  .. code-block:: console
+
+      desh:~$ dect sett --reset
+      desh:~$ dect sett -t 2
+      desh:~$ dect mac beacon_scan -c 1671
+
+* FT/Beacon device 2 - Start periodic cluster beacon TX on default band 1 and on the first free channel:
+
+  .. code-block:: console
+
+      desh:~$ dect mac beacon_start
+      ...
+      Channel 1675 was chosen for the beacon.
+      Beacon TX started.
+
+* FT/Beacon device 1 - Scan the beacon from device 2 by using special force:
+
+  .. code-block:: console
+
+      desh:~$ dect mac beacon_scan -c 1675 -f
+
+* FT/Beacon device 1 - Send association request to device 2:
+
+  .. code-block:: console
+
+      desh:~$ dect mac associate -t 2
+
+
+* FT/Beacon device 2 - Send association request to device 1:
+
+  .. code-block:: console
+
+      desh:~$ dect mac associate -t 1
+
+* FT/Beacon device 1 - Send JSON-formatted periodic RA data in 10-second intervals with the current modem temperature to the device 2:
+
+  .. code-block:: console
+
+      desh:~$ dect mac rach_tx -t 2 -d "Data from device 1" -i 10 -j
+
+* FT/Beacon device 2 - Send JSON-formatted periodic RA data in 10-second intervals with the current modem temperature to the device 1:
+
+  .. code-block:: console
+
+      desh:~$ dect mac rach_tx -t 1 -d "Data from device 2" -i 10 -j
+
+* FT/Beacon devices 1 & 2 - Stop periodic RA data sending:
+
+  .. code-block:: console
+
+      desh:~$ dect mac rach_tx stop
+
+* FT/Beacon device 1 - Send association release to the device 2:
+
+  .. code-block:: console
+
+      desh:~$ dect mac dissociate -t 2
+
+* FT/Beacon device 2 - Send association release to the device 1:
+
+  .. code-block:: console
+
+      desh:~$ dect mac dissociate -t 1
+
+* FT/Beacon devices 1 & 2 - Stop the beacon:
+
+  .. code-block:: console
+
+      desh:~$ dect mac beacon_stop
 
 Running commands at bootup
 ==========================

@@ -8,7 +8,7 @@
 #define DECT_PHY_SHELL_H
 
 #include <zephyr/kernel.h>
-#include "nrf_modem_dect_phy.h"
+#include <nrf_modem_dect_phy.h>
 
 #include "dect_common.h"
 #include "dect_common_settings.h"
@@ -106,6 +106,8 @@ struct dect_phy_ping_params {
 	int32_t ping_count;
 	int8_t tx_power_dbm;
 	uint8_t tx_mcs;
+	uint8_t tx_lbt_period_symbols;
+	int8_t tx_lbt_rssi_busy_threshold_dbm;
 	uint8_t slot_count;
 
 	int8_t expected_rx_rssi_level;
@@ -185,11 +187,15 @@ struct dect_phy_common_op_event_msgq_item {
 
 #define DECT_PHY_MAC_BEACON_RA_RESP_TX_HANDLE 1000
 
-#define DECT_PHY_MAC_CLIENT_RA_TX_HANDLE	      1001
-#define DECT_PHY_MAC_CLIENT_ASSOCIATION_TX_HANDLE     1002
-#define DECT_PHY_MAC_CLIENT_ASSOCIATION_RX_HANDLE     1003
-#define DECT_PHY_MAC_CLIENT_ASSOCIATION_REL_TX_HANDLE 1004
-
+#define DECT_PHY_MAC_CLIENT_RA_TX_HANDLE		1001
+#define DECT_PHY_MAC_CLIENT_RA_TX_CONTINUOUS_HANDLE	1002
+#define DECT_PHY_MAC_CLIENT_ASSOCIATION_TX_HANDLE	1003
+#define DECT_PHY_MAC_CLIENT_ASSOCIATION_RX_HANDLE	1004
+#define DECT_PHY_MAC_CLIENT_ASSOCIATION_REL_TX_HANDLE	1005
+#define DECT_PHY_MAC_CLIENT_ASSOCIATED_BG_SCAN		1006
+/* Following handles from DECT_PHY_MAC_CLIENT_ASSOCIATED_BG_SCAN + 1 to DECT_PHY_MAC_MAX_NEIGBORS
+ * are reserved for associated bg scannings.
+ */
 
 #define DECT_PHY_PERF_TX_HANDLE_START 10000
 #define DECT_PHY_PERF_TX_HANDLE_END   10049

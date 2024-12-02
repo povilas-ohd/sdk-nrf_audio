@@ -9,9 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <zephyr/shell/shell.h>
-#include "desh_print.h"
-#include "nrf_modem_dect_phy.h"
 
+#include <nrf_modem_dect_phy.h>
+#include <nrf_modem_at.h>
+
+#include "desh_print.h"
 #include "dect_common.h"
 #include "dect_common_utils.h"
 #include "dect_common_pdu.h"
@@ -20,22 +22,44 @@
 #include "dect_phy_api_scheduler.h"
 
 #include "dect_phy_shell.h"
+#include "dect_phy_ctrl.h"
 #include "dect_phy_mac_pdu.h"
 #include "dect_phy_mac_nbr.h"
+#include "dect_phy_mac_nbr_bg_scan.h"
+#include "dect_phy_mac_cluster_beacon.h"
 #include "dect_phy_mac.h"
 #include "dect_phy_mac_client.h"
 
 /**************************************************************************************************/
 
-static struct dect_phy_mac_ctrl_data {
+extern struct k_work_q dect_phy_ctrl_work_q;
+
+enum dect_phy_mac_client_association_states {
+	DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_DISASSOCIATED,
+	DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_WAITING_ASSOCIATION_RESP,
+	DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_ASSOCIATED,
+};
+struct dect_phy_mac_client_association_data {
+	enum dect_phy_mac_client_association_states state;
+	uint32_t target_long_rd_id;
+
+	uint32_t bg_scan_phy_handle;
+	bool bg_scan_ongoing;
+
+	struct dect_phy_mac_nbr_info_list_item *target_nbr;
+	struct k_work_delayable association_resp_wait_work;
+};
+static struct dect_phy_mac_client_data {
 	uint16_t client_seq_nbr;
+	struct dect_phy_mac_client_association_data associations[DECT_PHY_MAC_MAX_NEIGBORS];
 
 	uint64_t last_tx_time_mdm_ticks;
-
 } client_data = {
 	.client_seq_nbr = 0,
 	.last_tx_time_mdm_ticks = 0,
 };
+
+/**************************************************************************************************/
 
 static int dect_phy_mac_client_data_pdu_encode(struct dect_phy_mac_rach_tx_params *params,
 					       uint32_t nw_id_24msb, uint8_t nw_id_8lsb,
@@ -153,6 +177,15 @@ static uint64_t dect_phy_mac_client_next_rach_tx_time_get(
 	if (beacon_interval_ms < 0) {
 		return 0;
 	}
+	bool our_beacon_is_running = dect_phy_mac_cluster_beacon_is_running();
+
+	if (our_beacon_is_running) {
+		/* If our beacon is running, send beyond the window to get the priority over others.
+		 * This adds more delay to TX but is more reliable to avoid scheduling collisions.
+		 */
+		first_possible_tx += MS_TO_MODEM_TICKS(DECT_PHY_API_SCHEDULER_OP_TIME_WINDOW_MS);
+	}
+
 	beacon_interval_mdm_ticks = MS_TO_MODEM_TICKS(beacon_interval_ms);
 
 	/* We are sending after next beacon and ...  */
@@ -183,20 +216,114 @@ static uint64_t dect_phy_mac_client_next_rach_tx_time_get(
 	if (client_data.last_tx_time_mdm_ticks > first_possible_tx) {
 		first_possible_tx = client_data.last_tx_time_mdm_ticks + 1;
 	}
-	/* ...and in 1st RA if ok. Additionally, to get RX really on target:
+
+	/* ... and try to avoid collisions with our own beacon TX:  */
+	uint64_t next_our_beacon_frame_time = 0;
+
+	if (dect_phy_mac_cluster_beacon_is_running()) {
+		next_our_beacon_frame_time =
+			dect_phy_mac_cluster_beacon_last_tx_frame_time_get();
+		uint32_t our_beacon_interval_mdm_ticks =
+			MS_TO_MODEM_TICKS(DECT_PHY_MAC_CLUSTER_BEACON_INTERVAL_MS);
+
+		while (next_our_beacon_frame_time < first_possible_tx) {
+			next_our_beacon_frame_time += our_beacon_interval_mdm_ticks;
+		}
+	}
+
+	/* ...and in 1st RA (if not associated). Additionally, to get RX really on target:
 	 * delay TX by 2 subslots.
 	 */
 	ra_start_mdm_ticks = next_beacon_frame_start + ((target_nbr->ra_ie.start_subslot + 2) *
 							DECT_RADIO_SUBSLOT_DURATION_IN_MODEM_TICKS);
+
+	if (dect_phy_mac_client_associated_by_target_short_rd_id(target_nbr->short_rd_id)) {
+		/* To avoid collision with a background scan that is done with associated client */
+		ra_start_mdm_ticks += ra_interval_mdm_ticks;
+	}
+
 	while (ra_start_mdm_ticks < first_possible_tx &&
 	       ra_start_mdm_ticks < last_valid_rach_rx_frame_time) {
 		ra_start_mdm_ticks += ra_interval_mdm_ticks;
+		if (next_our_beacon_frame_time && dect_common_utils_mdm_ticks_is_in_range(
+							ra_start_mdm_ticks,
+							next_our_beacon_frame_time,
+							next_our_beacon_frame_time +
+							(DECT_RADIO_FRAME_DURATION_IN_MODEM_TICKS /
+								2))) {
+			ra_start_mdm_ticks += ra_interval_mdm_ticks;
+		}
 	}
 
 	return ra_start_mdm_ticks;
 }
 
-int dect_phy_mac_client_rach_tx(struct dect_phy_mac_nbr_info_list_item *target_nbr,
+static int dect_phy_mac_client_rach_tx(struct dect_phy_mac_nbr_info_list_item *target_nbr,
+				struct dect_phy_mac_rach_tx_params *params);
+
+struct dect_phy_mac_client_rach_tx_data {
+	struct k_work_delayable work;
+	struct dect_phy_mac_rach_tx_params cmd_params;
+	struct dect_phy_mac_nbr_info_list_item target_nbr;
+};
+static struct dect_phy_mac_client_rach_tx_data client_rach_tx_work_data;
+
+static void dect_phy_mac_client_rach_tx_worker(struct k_work *work_item)
+{
+	struct k_work_delayable *delayable_work = k_work_delayable_from_work(work_item);
+	struct dect_phy_mac_client_rach_tx_data *data =
+		CONTAINER_OF(delayable_work, struct dect_phy_mac_client_rach_tx_data, work);
+	struct dect_phy_mac_rach_tx_params cmd_params;
+	int err;
+
+	cmd_params = data->cmd_params;
+
+	if (data->cmd_params.get_mdm_temp) {
+		char tmp_str[DECT_DATA_MAX_LEN * 2] = {0};
+		int mdm_temperature = dect_phy_ctrl_modem_temperature_get();
+
+		/* Modem temperature to be included in a data JSON */
+		if (mdm_temperature == NRF_MODEM_DECT_PHY_TEMP_NOT_MEASURED) {
+			sprintf(tmp_str, "{\"data\":\"%s\",\"m_tmp\":\"N/A\"}",
+				cmd_params.tx_data_str);
+		} else {
+			sprintf(tmp_str, "{\"data\":\"%s\",\"m_tmp\":\"%d\"}",
+				cmd_params.tx_data_str, mdm_temperature);
+		}
+		memset(cmd_params.tx_data_str, 0, DECT_DATA_MAX_LEN);
+		strncpy(cmd_params.tx_data_str, tmp_str, DECT_DATA_MAX_LEN - 1);
+	}
+
+	err = dect_phy_mac_client_rach_tx(&data->target_nbr, &cmd_params);
+	if (err) {
+		desh_error("(%s): client_rach_tx failed: %d", (__func__), err);
+	}
+
+	if (cmd_params.interval_secs) {
+		k_work_schedule_for_queue(&dect_phy_ctrl_work_q,
+					  &client_rach_tx_work_data.work,
+					  K_SECONDS(cmd_params.interval_secs));
+	}
+}
+
+int dect_phy_mac_client_rach_tx_start(
+	struct dect_phy_mac_nbr_info_list_item *target_nbr,
+	struct dect_phy_mac_rach_tx_params *params)
+{
+	client_rach_tx_work_data.cmd_params = *params;
+	client_rach_tx_work_data.target_nbr = *target_nbr;
+	k_work_schedule_for_queue(
+		&dect_phy_ctrl_work_q, &client_rach_tx_work_data.work, K_SECONDS(0));
+
+	return 0;
+}
+
+void dect_mac_client_rach_tx_stop(void)
+{
+	k_work_cancel_delayable(&client_rach_tx_work_data.work);
+}
+
+static int dect_phy_mac_client_rach_tx(struct dect_phy_mac_nbr_info_list_item *target_nbr,
 				struct dect_phy_mac_rach_tx_params *params)
 {
 	struct dect_phy_settings *current_settings = dect_common_settings_ref_get();
@@ -273,8 +400,12 @@ int dect_phy_mac_client_rach_tx(struct dect_phy_mac_nbr_info_list_item *target_n
 	memcpy(&sched_list_item->sched_config.tx.phy_header.type_2, &phy_header.type_2,
 	       sizeof(phy_header.type_2));
 
-	sched_list_item->priority = DECT_PRIORITY1_TX;
+	sched_list_item->priority = DECT_PRIORITY0_FORCE_TX;
 	sched_list_item->phy_op_handle = DECT_PHY_MAC_CLIENT_RA_TX_HANDLE;
+
+	if (params->interval_secs) {
+		sched_list_item->phy_op_handle = DECT_PHY_MAC_CLIENT_RA_TX_CONTINUOUS_HANDLE;
+	}
 
 	/* Add tx operation to scheduler list */
 	if (!dect_phy_api_scheduler_list_item_add(sched_list_item)) {
@@ -402,8 +533,9 @@ static int dect_phy_mac_client_association_req_pdu_encode(
 	return header.packet_length;
 }
 
-int dect_phy_mac_client_associate(struct dect_phy_mac_nbr_info_list_item *target_nbr,
-				  struct dect_phy_mac_associate_params *params)
+static int dect_phy_mac_client_associate_msg_send(
+	struct dect_phy_mac_nbr_info_list_item *target_nbr,
+	struct dect_phy_mac_associate_params *params)
 {
 	struct dect_phy_settings *current_settings = dect_common_settings_ref_get();
 
@@ -479,7 +611,7 @@ int dect_phy_mac_client_associate(struct dect_phy_mac_nbr_info_list_item *target
 	memcpy(&sched_list_item->sched_config.tx.phy_header.type_2, &phy_header.type_2,
 	       sizeof(phy_header.type_2));
 
-	sched_list_item->priority = DECT_PRIORITY1_TX;
+	sched_list_item->priority = DECT_PRIORITY0_FORCE_TX;
 	sched_list_item->phy_op_handle = DECT_PHY_MAC_CLIENT_ASSOCIATION_TX_HANDLE;
 
 	/* Add tx operation to scheduler list */
@@ -527,7 +659,7 @@ int dect_phy_mac_client_associate(struct dect_phy_mac_nbr_info_list_item *target
 	rach_list_item_conf->rx.filter.short_network_id = target_nbr->nw_id_8lsb;
 	rach_list_item_conf->rx.filter.receiver_identity = current_settings->common.short_rd_id;
 
-	sched_list_item->priority = DECT_PRIORITY1_RX;
+	sched_list_item->priority = DECT_PRIORITY0_FORCE_RX;
 	sched_list_item->phy_op_handle = DECT_PHY_MAC_CLIENT_ASSOCIATION_RX_HANDLE;
 
 	if (!dect_phy_api_scheduler_list_item_add(sched_list_item)) {
@@ -550,6 +682,163 @@ int dect_phy_mac_client_associate(struct dect_phy_mac_nbr_info_list_item *target
 	return 0;
 err_exit:
 	return -1;
+}
+
+static struct dect_phy_mac_client_association_data *dect_phy_mac_client_free_association_get(void)
+{
+	for (int i = 0; i < DECT_PHY_MAC_MAX_NEIGBORS; i++) {
+		if (client_data.associations[i].state ==
+		    DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_DISASSOCIATED) {
+			return &client_data.associations[i];
+		}
+	}
+	return NULL;
+}
+
+static void dect_phy_mac_client_association_data_init(void)
+{
+	for (int i = 0; i < DECT_PHY_MAC_MAX_NEIGBORS; i++) {
+		client_data.associations[i].state =
+			DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_DISASSOCIATED;
+		client_data.associations[i].target_long_rd_id = 0;
+		client_data.associations[i].bg_scan_phy_handle =
+			DECT_PHY_MAC_CLIENT_ASSOCIATED_BG_SCAN + i;
+		client_data.associations[i].target_nbr = NULL;
+		client_data.associations[i].bg_scan_ongoing = false;
+	}
+}
+
+static struct dect_phy_mac_client_association_data *dect_phy_mac_client_association_data_get(
+	uint32_t target_long_rd_id)
+{
+	for (int i = 0; i < DECT_PHY_MAC_MAX_NEIGBORS; i++) {
+		if (client_data.associations[i].target_long_rd_id == target_long_rd_id) {
+			return &client_data.associations[i];
+		}
+	}
+	return NULL;
+}
+
+static void dect_phy_mac_client_associate_resp_timeout_worker(struct k_work *work_item)
+{
+	struct k_work_delayable *delayable_work = k_work_delayable_from_work(work_item);
+	struct dect_phy_mac_client_association_data *association_data =
+		CONTAINER_OF(delayable_work, struct dect_phy_mac_client_association_data,
+			     association_resp_wait_work);
+
+	if (association_data->state !=
+		DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_WAITING_ASSOCIATION_RESP) {
+		return;
+	}
+
+	association_data->target_nbr = NULL;
+	association_data->state = DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_DISASSOCIATED;
+	dect_phy_mac_nbr_bg_scan_stop(association_data->bg_scan_phy_handle);
+	association_data->bg_scan_ongoing = false;
+
+	desh_warn("Association response timeout: not associated with device long RD ID %d",
+		association_data->target_long_rd_id);
+}
+
+int dect_phy_mac_client_associate(struct dect_phy_mac_nbr_info_list_item *target_nbr,
+				  struct dect_phy_mac_associate_params *params)
+{
+	struct dect_phy_mac_client_association_data *association_data = NULL;
+	int err;
+
+	association_data = dect_phy_mac_client_association_data_get(params->target_long_rd_id);
+	if (association_data == NULL) {
+		association_data = dect_phy_mac_client_free_association_get();
+		if (association_data == NULL) {
+			desh_error("(%s): Max amount of associated clients", (__func__));
+			return -EINVAL;
+		}
+	} else {
+		desh_warn("(%s): Association exists for target long rd id %u - continue",
+			(__func__), params->target_long_rd_id);
+		association_data->target_nbr = target_nbr;
+	}
+	err = dect_phy_mac_client_associate_msg_send(target_nbr, params);
+	if (err) {
+		desh_error("(%s): dect_phy_mac_client_associate_msg_send failed: %d",
+			(__func__), err);
+		return err;
+	}
+	association_data->state = DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_WAITING_ASSOCIATION_RESP;
+	association_data->target_long_rd_id = params->target_long_rd_id;
+	association_data->target_nbr = target_nbr;
+
+	k_work_init_delayable(
+		&association_data->association_resp_wait_work,
+		dect_phy_mac_client_associate_resp_timeout_worker);
+
+	/* Start worker for waiting association response */
+	k_work_schedule_for_queue(&dect_phy_ctrl_work_q,
+				  &association_data->association_resp_wait_work,
+				  K_SECONDS(DECT_PHY_MAC_CLIENT_ASSOCIATION_RESP_WAIT_TIME_SEC));
+	return 0;
+}
+
+void dect_phy_mac_client_nbr_scan_completed_cb(
+	struct dect_phy_mac_nbr_bg_scan_op_completed_info *info)
+{
+	struct dect_phy_mac_client_association_data *association_data =
+		dect_phy_mac_client_association_data_get(info->target_long_rd_id);
+
+	if (!association_data) {
+		desh_warn("(%s): No association data found for target long rd id %u",
+			(__func__), info->target_long_rd_id);
+		return;
+	}
+	if (info->cause == DECT_PHY_MAC_NBR_BG_SCAN_OP_COMPLETED_CAUSE_USER_INITIATED) {
+		desh_print("(%s): Background scan completed for target long rd id %u. "
+			   "Cause: user initiated",
+			(__func__), info->target_long_rd_id);
+	} else {
+		__ASSERT_NO_MSG(info->cause ==
+			DECT_PHY_MAC_NBR_BG_SCAN_OP_COMPLETED_CAUSE_UNREACHABLE);
+		desh_warn("(%s): Background scan completed for target long rd id %u. "
+			   "Cause: unreachable for a %d msecs.",
+			(__func__), info->target_long_rd_id,
+			DECT_PHY_MAC_NBR_BG_SCAN_MAX_UNREACHABLE_TIME_MS);
+	}
+	association_data->bg_scan_ongoing = false;
+}
+
+void dect_phy_mac_client_associate_resp_handle(
+	dect_phy_mac_common_header_t *common_header,
+	dect_phy_mac_association_resp_t *association_resp)
+{
+	struct dect_phy_mac_client_association_data *association_data =
+		dect_phy_mac_client_association_data_get(common_header->transmitter_id);
+
+	if (!association_data) {
+		desh_warn("(%s): No association data found for transmitter id %u",
+			(__func__), common_header->transmitter_id);
+		return;
+	}
+	k_work_cancel_delayable(&association_data->association_resp_wait_work);
+
+	association_data->state =  DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_ASSOCIATED;
+	desh_print("(%s): associated with device %d - starting background scan",
+		(__func__), common_header->transmitter_id);
+
+	struct dect_phy_mac_nbr_bg_scan_params bg_scan_params;
+
+	bg_scan_params.cb_op_completed = dect_phy_mac_client_nbr_scan_completed_cb;
+	bg_scan_params.target_nbr = association_data->target_nbr;
+	bg_scan_params.target_long_rd_id = association_data->target_long_rd_id;
+	bg_scan_params.phy_op_handle = association_data->bg_scan_phy_handle;
+
+	if (association_data->bg_scan_ongoing) {
+		dect_phy_mac_nbr_bg_scan_stop(association_data->bg_scan_phy_handle);
+	}
+
+	if (dect_phy_mac_nbr_bg_scan_start(&bg_scan_params)) {
+		desh_warn("(%s): dect_phy_mac_nbr_bg_scan_start failed", (__func__));
+	} else {
+		association_data->bg_scan_ongoing = true;
+	}
 }
 
 /**************************************************************************************************/
@@ -647,8 +936,9 @@ static int dect_phy_mac_client_association_rel_pdu_encode(
 	return header.packet_length;
 }
 
-int dect_phy_mac_client_dissociate(struct dect_phy_mac_nbr_info_list_item *target_nbr,
-				   struct dect_phy_mac_associate_params *params)
+static int dect_phy_mac_client_dissociate_msg_send(
+	struct dect_phy_mac_nbr_info_list_item *target_nbr,
+	struct dect_phy_mac_associate_params *params)
 {
 	struct dect_phy_settings *current_settings = dect_common_settings_ref_get();
 
@@ -746,3 +1036,72 @@ int dect_phy_mac_client_dissociate(struct dect_phy_mac_nbr_info_list_item *targe
 
 	return 0;
 }
+
+int dect_phy_mac_client_dissociate(struct dect_phy_mac_nbr_info_list_item *target_nbr,
+				   struct dect_phy_mac_associate_params *params)
+{
+	struct dect_phy_mac_client_association_data *association_data =
+		dect_phy_mac_client_association_data_get(target_nbr->long_rd_id);
+	int err;
+
+	if (!association_data) {
+		desh_warn("(%s): Not associated with device %d",
+			(__func__), target_nbr->long_rd_id);
+		return -EINVAL;
+	}
+
+	k_work_cancel_delayable(&association_data->association_resp_wait_work);
+
+	dect_phy_mac_nbr_bg_scan_stop(association_data->bg_scan_phy_handle);
+	association_data->bg_scan_ongoing = false;
+
+	association_data->state = DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_DISASSOCIATED;
+	association_data->target_nbr = NULL;
+	association_data->target_long_rd_id = 0;
+
+	err = dect_phy_mac_client_dissociate_msg_send(target_nbr, params);
+	if (err) {
+		desh_error("(%s): dect_phy_mac_client_associate_msg_send failed: %d",
+			(__func__), err);
+	}
+
+	return err;
+}
+
+bool dect_phy_mac_client_associated_by_target_short_rd_id(uint16_t target_short_rd_id)
+{
+	for (int i = 0; i < DECT_PHY_MAC_MAX_NEIGBORS; i++) {
+		if (client_data.associations[i].state ==
+			    DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_ASSOCIATED ||
+		    client_data.associations[i].state ==
+			    DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_WAITING_ASSOCIATION_RESP) {
+			if (client_data.associations[i].target_nbr->short_rd_id ==
+			    target_short_rd_id) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void dect_phy_mac_client_status_print(void)
+{
+	desh_print("Client status:");
+	for (int i = 0; i < DECT_PHY_MAC_MAX_NEIGBORS; i++) {
+		if (client_data.associations[i].state !=
+		    DECT_PHY_MAC_CLIENT_ASSOCIATION_STATE_DISASSOCIATED) {
+			desh_print("  Association #%d: long RD ID %u",
+				i + 1, client_data.associations[i].target_long_rd_id);
+		}
+	}
+}
+
+static int dect_phy_mac_client_init(void)
+{
+	k_work_init_delayable(&client_rach_tx_work_data.work, dect_phy_mac_client_rach_tx_worker);
+	dect_phy_mac_client_association_data_init();
+
+	return 0;
+}
+
+SYS_INIT(dect_phy_mac_client_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

@@ -19,7 +19,7 @@
 #include <modem/nrf_modem_lib.h>
 #include <nrf_modem_at.h>
 
-#include "nrf_modem_dect_phy.h"
+#include <nrf_modem_dect_phy.h>
 
 #include "dect_common_utils.h"
 #include "dect_phy_api_scheduler.h"
@@ -405,7 +405,8 @@ static const char dect_phy_rf_tool_cmd_usage_str[] =
 	"  -c, --channel <int>,               Channel. Default 1665.\n"
 	"                                     Ranges: band #1: 1657-1677 (only odd numbers as per\n"
 	"                                     ETSI EN 301 406-2, ch 4.3.2.3),\n"
-	"                                     band #2 1680-1700, band #9 1691-1711.\n"
+	"                                     band #2 1680-1700, band #4 524-552,\n"
+	"                                     band #9 1703-1711, band #22 1691-1711.\n"
 	"  -e  --rx_exp_rssi_level <int>,     Set expected RSSI level on RX (dBm).\n"
 	"                                     Default: from common rx settings.\n"
 	"  -p  --tx_pwr <int>,                TX power (dBm),\n"
@@ -500,8 +501,8 @@ static int dect_phy_rf_tool_cmd(const struct shell *shell, size_t argc, char **a
 	optind = 1;
 
 	if (argv[1] != NULL && !strcmp(argv[1], "stop")) {
-		dect_phy_ctrl_cert_cmd_stop();
-		desh_print("cert command stopping.");
+		dect_phy_ctrl_rf_tool_cmd_stop();
+		desh_print("rf_tool command stopping.");
 		return 0;
 	}
 	struct dect_phy_settings *current_settings = dect_common_settings_ref_get();
@@ -709,7 +710,7 @@ static int dect_phy_rf_tool_cmd(const struct shell *shell, size_t argc, char **a
 		params.find_rx_sync = true;
 	}
 
-	ret = dect_phy_ctrl_cert_cmd(&params);
+	ret = dect_phy_ctrl_rf_tool_cmd(&params);
 	if (ret) {
 		desh_error("Cannot start rf_tool command, ret: %d", ret);
 	} else {
@@ -741,6 +742,11 @@ static const char dect_phy_ping_cmd_usage_str[] =
 	"      --c_tx_pwr <int>,      TX power (dBm),\n"
 	"                             [-40,-30,-20,-16,-12,-8,-4,0,4,7,10,13,16,19,21,23].\n"
 	"                             Default: from common tx settings.\n"
+	"      --c_tx_lbt_period <cnt>,  Listen Before Talk (LBT) period (symbol count).\n"
+	"                                Zero value disables LBT (default).\n"
+	"                                Valid range for symbol count: 2-110.\n"
+	"      --c_tx_lbt_busy_th <dbm>, LBT busy RSSI threshold (dBm). Valid only when LBT\n"
+	"                                is enabled. Default from RSSI busy threshold setting.\n"
 	"      --s_tx_id <id>,        Target server transmitter id (default: 38).\n"
 	"                             Note: lowest 16bits of transmitter id (long RD ID).\n"
 	"  -e  --rx_exp_rssi_level <int>, Set expected RSSI level on RX (dBm).\n"
@@ -770,6 +776,8 @@ enum {
 	DECT_SHELL_PING_PAYLOAD_SLOT_COUNT,
 	DECT_SHELL_PING_TX_PWR,
 	DECT_SHELL_PING_TX_MCS,
+	DECT_SHELL_PING_TX_LBT_PERIOD,
+	DECT_SHELL_PING_TX_LBT_RSSI_BUSY_THRESHOLD,
 	DECT_SHELL_PING_DEST_SERVER_TX_ID,
 	DECT_SHELL_PING_TX_PWR_CTRL_AUTO,
 	DECT_SHELL_PING_TX_PWR_CTRL_PDU_RX_EXPECTED_RSSI_LEVEL,
@@ -788,6 +796,8 @@ static struct option long_options_ping[] = {
 	{"c_slots", required_argument, 0, 'l'},
 	{"c_tx_pwr", required_argument, 0, DECT_SHELL_PING_TX_PWR},
 	{"c_tx_mcs", required_argument, 0, DECT_SHELL_PING_TX_MCS},
+	{"c_tx_lbt_period", required_argument, 0, DECT_SHELL_PING_TX_LBT_PERIOD },
+	{"c_tx_lbt_busy_th", required_argument, 0, DECT_SHELL_PING_TX_LBT_RSSI_BUSY_THRESHOLD },
 	{"rx_exp_rssi_level", required_argument, 0, 'e'},
 	{"s_tx_id", required_argument, 0, DECT_SHELL_PING_DEST_SERVER_TX_ID},
 	{"tx_pwr_ctrl_pdu_rx_exp_rssi_level", required_argument, 0,
@@ -801,6 +811,7 @@ static int dect_phy_ping_cmd(const struct shell *shell, size_t argc, char **argv
 	int ret;
 	int long_index = 0;
 	int opt;
+	int tmp_value;
 
 	if (argc < 2) {
 		goto show_usage;
@@ -809,8 +820,8 @@ static int dect_phy_ping_cmd(const struct shell *shell, size_t argc, char **argv
 	optind = 1;
 
 	if (argv[1] != NULL && !strcmp(argv[1], "stop")) {
-		dect_phy_ctrl_ping_cmd_stop();
 		desh_print("ping command stopping.");
+		dect_phy_ctrl_ping_cmd_stop();
 		return 0;
 	}
 	struct dect_phy_settings *current_settings = dect_common_settings_ref_get();
@@ -826,6 +837,8 @@ static int dect_phy_ping_cmd(const struct shell *shell, size_t argc, char **argv
 	params.expected_rx_rssi_level = current_settings->rx.expected_rssi_level;
 	params.tx_power_dbm = current_settings->tx.power_dbm;
 	params.tx_mcs = current_settings->tx.mcs;
+	params.tx_lbt_period_symbols = 0;
+	params.tx_lbt_rssi_busy_threshold_dbm = current_settings->rssi_scan.busy_threshold;
 	params.debugs = true;
 	params.rssi_reporting_enabled = false;
 	params.pwr_ctrl_pdu_expected_rx_rssi_level = -60;
@@ -886,6 +899,31 @@ static int dect_phy_ping_cmd(const struct shell *shell, size_t argc, char **argv
 		}
 		case DECT_SHELL_PING_TX_MCS: {
 			params.tx_mcs = atoi(optarg);
+			break;
+		}
+		case DECT_SHELL_PING_TX_LBT_PERIOD: {
+			tmp_value = atoi(optarg);
+			if (tmp_value < DECT_PHY_LBT_PERIOD_MIN_SYM ||
+				tmp_value > DECT_PHY_LBT_PERIOD_MAX_SYM) {
+				desh_error("Invalid LBT period %d (range: [%d,%d])",
+					   tmp_value,
+					   DECT_PHY_LBT_PERIOD_MIN_SYM,
+					   DECT_PHY_LBT_PERIOD_MAX_SYM);
+				goto show_usage;
+			}
+			params.tx_lbt_period_symbols = tmp_value;
+			break;
+		}
+		case DECT_SHELL_PING_TX_LBT_RSSI_BUSY_THRESHOLD: {
+			tmp_value = atoi(optarg);
+			if (tmp_value >= 0 ||
+			    tmp_value < INT8_MIN) {
+				desh_error("Invalid LBT RSSI busy threshold %d (range: [%d,-1])",
+					   tmp_value,
+					   INT8_MIN);
+				goto show_usage;
+			}
+			params.tx_lbt_rssi_busy_threshold_dbm = tmp_value;
 			break;
 		}
 		case DECT_SHELL_PING_CHANNEL: {
@@ -1334,7 +1372,8 @@ static const char dect_phy_sett_cmd_usage_str[] =
 	"  -b, --band_nbr <#>,        Set used band.\n"
 	"                             Impacted on when a channel is set as zero\n"
 	"                             (e.g. in rssi_scan).\n"
-	"                             Default: band #1. Other supported bands are: 2, 9 and 22.\n"
+	"                             Default: band #1. Other supported bands are:\n"
+	"                             2, 4, 9 and 22.\n"
 	"  -d, --sche_delay <usecs>,  Estimated scheduling delay (us).\n"
 	"RSSI measurement settings:\n"
 	"      --rssi_scan_time <msecs>,   Channel access: set the time (msec) that is used for\n"
@@ -1470,6 +1509,7 @@ static int dect_phy_sett_cmd(const struct shell *shell, size_t argc, char **argv
 
 	int long_index = 0;
 	int opt, tmp_value;
+	bool phy_api_reinit_needed = false;
 
 	if (argc < 2) {
 		goto show_usage;
@@ -1510,16 +1550,18 @@ static int dect_phy_sett_cmd(const struct shell *shell, size_t argc, char **argv
 		case 'b': {
 			tmp_value = atoi(optarg);
 			if (tmp_value == 1 || tmp_value == 2 || tmp_value == 4 || tmp_value == 9 ||
-			    tmp_value == 22 || tmp_value == 868) {
+			    tmp_value == 22) {
 				newsettings.common.band_nbr = tmp_value;
 			} else {
 				desh_error("Band #%d is not supported.", tmp_value);
 				return -EINVAL;
 			}
-			if (newsettings.common.band_nbr == 4 ||
-			    newsettings.common.band_nbr == 868) {
-				desh_print("Custom low band chosen: "
-					   "custom modem fw is needed to get it working.");
+			if ((newsettings.common.band_nbr == 4 &&
+			     current_settings.common.band_nbr != 4) ||
+			    (current_settings.common.band_nbr == 4 &&
+			     newsettings.common.band_nbr != 4)) {
+				/* If changing to/from 4, we need dto reinit PHY API */
+				phy_api_reinit_needed = true;
 			}
 			break;
 		}
@@ -1604,7 +1646,8 @@ static int dect_phy_sett_cmd(const struct shell *shell, size_t argc, char **argv
 		}
 		case DECT_SHELL_SETT_RESET_ALL: {
 			dect_common_settings_defaults_set();
-			return 0;
+			phy_api_reinit_needed = true;
+			goto settings_updated;
 		}
 		case 'h':
 			goto show_usage;
@@ -1620,7 +1663,11 @@ static int dect_phy_sett_cmd(const struct shell *shell, size_t argc, char **argv
 	}
 
 	dect_common_settings_write(&newsettings);
-	dect_phy_ctrl_msgq_non_data_op_add(DECT_PHY_CTRL_OP_SETTINGS_UPDATED);
+settings_updated:
+	dect_phy_ctrl_msgq_data_op_add(
+		DECT_PHY_CTRL_OP_SETTINGS_UPDATED,
+		(void *)&phy_api_reinit_needed,
+		sizeof(bool));
 	return 0;
 
 show_usage:

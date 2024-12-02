@@ -9,6 +9,7 @@
 
 #include <zephyr/kernel.h>
 #include "dect_common.h"
+#include "dect_phy_common.h"
 
 /* Following defines the time how much in advance is scheduled to modem */
 #define DECT_PHY_API_SCHEDULER_OP_TIME_WINDOW_MS 500
@@ -41,8 +42,8 @@ struct dect_harq_tx_payload_data {
 
 typedef void (*dect_phy_api_scheduler_op_interval_count_callback_t)(uint32_t handle);
 
-typedef void (*dect_phy_api_scheduler_op_completed_callback_t)(uint64_t mdm_time,
-							       uint64_t frame_time, int mdm_status);
+typedef void (*dect_phy_api_scheduler_op_completed_callback_t)(
+	struct dect_phy_common_op_completed_params *params, uint64_t frame_time);
 typedef void (*dect_phy_api_scheduler_op_pdc_received_callback_t)(uint64_t time, uint8_t *data,
 								  uint32_t data_length,
 								  int16_t rx_rssi_dbm,
@@ -185,25 +186,30 @@ struct dect_phy_api_scheduler_list_item *
 dect_phy_api_scheduler_list_item_add(struct dect_phy_api_scheduler_list_item *list_item);
 
 struct dect_phy_api_scheduler_list_item *
-dect_phy_api_scheduler_list_item_remove_by_phy_op_handle(uint16_t handle);
+dect_phy_api_scheduler_list_item_remove_by_phy_op_handle(uint32_t handle);
 
-void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(uint16_t handle);
-void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle_range(uint16_t range_start,
-									    uint16_t range_end);
+bool dect_phy_api_scheduler_list_item_running_by_phy_op_handle(uint32_t handle);
 
-void dect_phy_api_scheduler_th_list_item_remove_dealloc_by_phy_op_handle(uint16_t handle);
+void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle(uint32_t handle);
+void dect_phy_api_scheduler_list_item_remove_dealloc_by_phy_op_handle_range(uint32_t range_start,
+									    uint32_t range_end);
+
+void dect_phy_api_scheduler_th_list_item_remove_dealloc_by_phy_op_handle(uint32_t handle);
 
 void dect_phy_api_scheduler_list_item_pdu_payload_update_by_phy_handle(
-	uint16_t handle, uint8_t *new_encoded_payload_pdu, uint16_t size);
+	uint32_t handle, uint8_t *new_encoded_payload_pdu, uint16_t size);
 
 void dect_phy_api_scheduler_list_item_beacon_tx_sched_config_update_by_phy_op_handle(
-	uint16_t handle, struct dect_phy_api_scheduler_list_item_config *tx_conf);
+	uint32_t handle, struct dect_phy_api_scheduler_list_item_config *tx_conf);
+
+void dect_phy_api_scheduler_list_item_sched_config_frame_time_update_by_phy_op_handle(
+	uint32_t handle, int64_t frame_time_diff);
 
 void dect_phy_api_scheduler_list_item_beacon_rx_sched_config_update_by_phy_op_handle_range(
 	uint16_t range_start, uint16_t range_end,
 	struct dect_phy_api_scheduler_list_item_config *rx_conf);
 void dect_phy_api_scheduler_list_item_tx_phy_header_update_by_phy_handle(
-	uint16_t handle, union nrf_modem_dect_phy_hdr *phy_header,
+	uint32_t handle, union nrf_modem_dect_phy_hdr *phy_header,
 	dect_phy_header_type_t header_type);
 
 void dect_phy_api_scheduler_list_status_print(void);
@@ -219,12 +225,6 @@ bool dect_phy_api_scheduler_done_list_is_empty(void);
 
 /**************************************************************************************************/
 
-struct dect_phy_api_scheduler_op_completed_params {
-	uint64_t time;
-	uint32_t handle;
-	enum nrf_modem_dect_phy_err status;
-};
-
 struct dect_phy_api_scheduler_op_pdc_type_rcvd_params {
 	uint64_t time;
 
@@ -238,7 +238,7 @@ struct dect_phy_api_scheduler_op_pdc_type_rcvd_params {
 /* API to inform mdm operations */
 
 int dect_phy_api_scheduler_mdm_op_completed(
-	struct dect_phy_api_scheduler_op_completed_params *params);
+	struct dect_phy_common_op_completed_params *params);
 int dect_phy_api_scheduler_mdm_pdc_data_recv(
 	struct dect_phy_api_scheduler_op_pdc_type_rcvd_params *rcv_data);
 

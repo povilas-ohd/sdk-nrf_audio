@@ -5,3 +5,4 @@
 #
 
 add_subdirectory_ifdef(CONFIG_BT_RAS_RRSP rrsp)
+add_subdirectory_ifdef(CONFIG_BT_RAS_RREQ rreq)

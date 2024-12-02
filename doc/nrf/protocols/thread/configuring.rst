@@ -98,6 +98,22 @@ See the following files for more options that you might want to change:
 .. note::
    You can find the default configuration for all :ref:`openthread_samples` in the :file:`nrf/subsys/net/openthread/Kconfig.defconfig` file.
 
+.. _thread_configuring_messagepool:
+
+Message pool configuration
+**************************
+
+OpenThread uses a message pool to manage memory for message buffers.
+Memory for the message pool can be statically allocated by the OpenThread stack or managed by the platform.
+You can use the :kconfig:option:`CONFIG_OPENTHREAD_PLATFORM_MESSAGE_MANAGEMENT` Kconfig option to enable platform message management.
+
+Message buffer size and number of message buffers in the pool can be configured with the :kconfig:option:`CONFIG_OPENTHREAD_MESSAGE_BUFFER_SIZE` and :kconfig:option:`CONFIG_OPENTHREAD_NUM_MESSAGE_BUFFERS` Kconfig options, respectively.
+By default, the message buffer size is set to ``128``, and the number of message buffers is set to ``96`` for a Full Thread Device and ``64`` for a Minimal Thread Device.
+
+.. note::
+   When using :ref:`thread_ug_prebuilt`, changing the :kconfig:option:`CONFIG_OPENTHREAD_PLATFORM_MESSAGE_MANAGEMENT` Kconfig option will have no effect.
+   Additionally, the :kconfig:option:`CONFIG_OPENTHREAD_MESSAGE_BUFFER_SIZE` Kconfig option has to be set to the same value that is used in the pre-built library.
+
 .. _thread_ug_thread_specification_options:
 
 Thread Specification options
@@ -267,7 +283,6 @@ Trusted Firmware-M support options
 
 To configure your Thread application to run with Trusted Firmware-M, use the following board target:
 
-* ``nrf5340dk/nrf5340/cpuapp/ns`` for the nRF5340 DK
 * ``nrf54l15dk/nrf54l15/cpuapp/ns``` for the nRF54L15 DK
 
 For more Trusted Firmware-M documentation, see :ref:`ug_tfm` and the official `TF-M documentation`_.

@@ -203,31 +203,6 @@ NRF = [
     ("app_dev/device_guides/working_with_nrf/nrf54l/nrf54l15_gs", "gsg_guides"),
     ("device_guides/working_with_nrf/nrf54l/testing_dfu", "app_dev/device_guides/nrf54l/testing_dfu"), # Testing the DFU solution
     ("app_dev/device_guides/working_with_nrf/nrf54l/testing_dfu", "app_dev/device_guides/nrf54l/testing_dfu"),
-    ("device_guides/nrf54h", "app_dev/device_guides/nrf54h"), # Developing with nRF54H Series
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_gs", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_gs"), # Getting started with the nRF54H20 DK
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_app_samples", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_app_samples"), # nRF54H20 applications and samples (orphaned as of 2.7.0)
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture"), # Architecture of nRF54H20 (landing)
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_cpu", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_cpu"), # nRF54H20 Domains
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_memory", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_memory"), # nRF54H20 Memory Layout
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_ipc", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_ipc"), # Interprocessor Communication in nRF54H20
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_boot", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_boot"), # nRF54H20 Boot Sequence
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_lifecycle", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_lifecycle"), # nRF54H20 lifecycle states
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_configuration", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_configuration"), # Configuring the nRF54H20 DK
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_logging", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_logging"), # nRF54H20 logging (orphaned as of 2.7.0)
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_nrf7002ek", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_nrf7002ek"), # Working with the nRF54H20 DK and the nRF7002 EK (orphaned as of 2.7.0)
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_dfu", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_dfu"), # Device Firmware Update using SUIT (landing)
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_intro", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_intro"), # Introduction to SUIT
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_manifest_overview", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_manifest_overview"), # SUIT manifest overview
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_qsg", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_qsg"), # Customize SUIT DFU quick start guide
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_dfu", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_dfu"), # How to customize the SUIT DFU process
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_fetch", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_fetch"), # How to fetch payloads
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_external_memory", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_external_memory"), # Firmware upgrade with external memory
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_components", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_components"), # SUIT components
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_hierarchical_manifests", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_hierarchical_manifests"), # Hierarchical manifests
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_compare_other_dfu", "app_dev/bootloaders_dfu/index"), # DFU and bootloader comparison (removed after 2.7.0) > Bootloaders and DFU (landing)
-    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_compare_other_dfu", "app_dev/bootloaders_dfu/index"),
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_debugging", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_debugging"), # nRF54H20 debugging
-    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_custom_pcb", "app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_custom_pcb"), # Configuring your application for a custom PCB
     ("ug_nrf53", "app_dev/device_guides/nrf53/index"), # Developing with nRF53 Series (landing)
     ("nrf53", "app_dev/device_guides/nrf53/index"),
     ("device_guides/nrf53", "app_dev/device_guides/nrf53/index"),
@@ -306,7 +281,7 @@ NRF = [
     ("ug_ble_controller", "protocols/bt/index"), # Bluetooth LE Controller
     ("protocols/ble/index", "protocols/bt/index"),
     ("protocols/bt/ble/index", "protocols/bt/bt_stack_arch"),
-    ("protocols/bt/ble/radio_notification_conn_cb", "libraries/bluetooth_services/radio_notification_conn_cb"),
+    ("protocols/bt/ble/radio_notification_conn_cb", "libraries/bluetooth/radio_notification_conn_cb"),
     ("ug_bt_mesh", "protocols/bt/bt_mesh/index"), # Bluetooth Mesh (landing)
     ("protocols/bt_mesh/index", "protocols/bt/bt_mesh/index"),
     ("ug_bt_mesh_supported_features", "protocols/bt/bt_mesh/overview/index"), # Supported Bluetooth Mesh features (file removed; part of the overview index page now)
@@ -430,6 +405,107 @@ NRF = [
     ("samples/wifi/sr_coex/README", "samples/wifi/ble_coex/README"), # Wi-Fi: Bluetooth LE coexistence
     ("samples/samples_zigbee", "samples/zigbee"), # Zigbee samples (landing)
     ("samples/samples_other", "samples/other"), # Other samples (landing)
+    ("libraries/bluetooth_services/index", "libraries/bluetooth/index"), # Changed the folder name libraries/bluetooth_services to libraries/bluetooth to better match the include folder structure
+    ("libraries/bluetooth_services/adv_prov", "libraries/bluetooth/adv_prov"),
+    ("libraries/bluetooth_services/conn_ctx", "libraries/bluetooth/conn_ctx"),
+    ("libraries/bluetooth_services/enocean", "libraries/bluetooth/enocean"),
+    ("libraries/bluetooth_services/gatt_dm", "libraries/bluetooth/gatt_dm"),
+    ("libraries/bluetooth_services/gatt_pool", "libraries/bluetooth/gatt_pool"),
+    ("libraries/bluetooth_services/mesh", "libraries/bluetooth/mesh"),
+    ("libraries/bluetooth_services/mesh/model_types", "libraries/bluetooth/mesh/model_types"),
+    ("libraries/bluetooth_services/mesh/gen_onoff", "libraries/bluetooth/mesh/gen_onoff"),
+    ("libraries/bluetooth_services/mesh/gen_onoff_srv", "libraries/bluetooth/mesh/gen_onoff_srv"),
+    ("libraries/bluetooth_services/mesh/gen_onoff_cli", "libraries/bluetooth/mesh/gen_onoff_cli"),
+    ("libraries/bluetooth_services/mesh/gen_lvl", "libraries/bluetooth/mesh/gen_lvl"),
+    ("libraries/bluetooth_services/mesh/gen_lvl_srv", "libraries/bluetooth/mesh/gen_lvl_srv"),
+    ("libraries/bluetooth_services/mesh/gen_lvl_cli", "libraries/bluetooth/mesh/gen_lvl_cli"),
+    ("libraries/bluetooth_services/mesh/gen_dtt", "libraries/bluetooth/mesh/gen_dtt"),
+    ("libraries/bluetooth_services/mesh/gen_dtt_srv", "libraries/bluetooth/mesh/gen_dtt_srv"),
+    ("libraries/bluetooth_services/mesh/gen_dtt_cli", "libraries/bluetooth/mesh/gen_dtt_cli"),
+    ("libraries/bluetooth_services/mesh/gen_ponoff", "libraries/bluetooth/mesh/gen_ponoff"),
+    ("libraries/bluetooth_services/mesh/gen_ponoff_srv", "libraries/bluetooth/mesh/gen_ponoff_srv"),
+    ("libraries/bluetooth_services/mesh/gen_ponoff_cli", "libraries/bluetooth/mesh/gen_ponoff_cli"),
+    ("libraries/bluetooth_services/mesh/gen_plvl", "libraries/bluetooth/mesh/gen_plvl"),
+    ("libraries/bluetooth_services/mesh/gen_plvl_srv", "libraries/bluetooth/mesh/gen_plvl_srv"),
+    ("libraries/bluetooth_services/mesh/gen_plvl_cli", "libraries/bluetooth/mesh/gen_plvl_cli"),
+    ("libraries/bluetooth_services/mesh/gen_battery", "libraries/bluetooth/mesh/gen_battery"),
+    ("libraries/bluetooth_services/mesh/gen_battery_srv", "libraries/bluetooth/mesh/gen_battery_srv"),
+    ("libraries/bluetooth_services/mesh/gen_battery_cli", "libraries/bluetooth/mesh/gen_battery_cli"),
+    ("libraries/bluetooth_services/mesh/gen_loc", "libraries/bluetooth/mesh/gen_loc"),
+    ("libraries/bluetooth_services/mesh/gen_loc_srv", "libraries/bluetooth/mesh/gen_loc_srv"),
+    ("libraries/bluetooth_services/mesh/gen_loc_cli", "libraries/bluetooth/mesh/gen_loc_cli"),
+    ("libraries/bluetooth_services/mesh/gen_prop", "libraries/bluetooth/mesh/gen_prop"),
+    ("libraries/bluetooth_services/mesh/gen_prop_srv", "libraries/bluetooth/mesh/gen_prop_srv"),
+    ("libraries/bluetooth_services/mesh/gen_prop_cli", "libraries/bluetooth/mesh/gen_prop_cli"),
+    ("libraries/bluetooth_services/mesh/lightness", "libraries/bluetooth/mesh/lightness"),
+    ("libraries/bluetooth_services/mesh/lightness_srv", "libraries/bluetooth/mesh/lightness_srv"),
+    ("libraries/bluetooth_services/mesh/lightness_cli", "libraries/bluetooth/mesh/lightness_cli"),
+    ("libraries/bluetooth_services/mesh/light_ctrl", "libraries/bluetooth/mesh/light_ctrl"),
+    ("libraries/bluetooth_services/mesh/light_ctrl_srv", "libraries/bluetooth/mesh/light_ctrl_srv"),
+    ("libraries/bluetooth_services/mesh/light_ctrl_cli", "libraries/bluetooth/mesh/light_ctrl_cli"),
+    ("libraries/bluetooth_services/mesh/light_ctrl_reg", "libraries/bluetooth/mesh/light_ctrl_reg"),
+    ("libraries/bluetooth_services/mesh/light_ctrl_reg_spec", "libraries/bluetooth/mesh/light_ctrl_reg_spec"),
+    ("libraries/bluetooth_services/mesh/light_ctl", "libraries/bluetooth/mesh/light_ctl"),
+    ("libraries/bluetooth_services/mesh/light_ctl_cli", "libraries/bluetooth/mesh/light_ctl_cli"),
+    ("libraries/bluetooth_services/mesh/light_ctl_srv", "libraries/bluetooth/mesh/light_ctl_srv"),
+    ("libraries/bluetooth_services/mesh/light_temp_srv", "libraries/bluetooth/mesh/light_temp_srv"),
+    ("libraries/bluetooth_services/mesh/light_xyl", "libraries/bluetooth/mesh/light_xyl"),
+    ("libraries/bluetooth_services/mesh/light_xyl_cli", "libraries/bluetooth/mesh/light_xyl_cli"),
+    ("libraries/bluetooth_services/mesh/light_xyl_srv", "libraries/bluetooth/mesh/light_xyl_srv"),
+    ("libraries/bluetooth_services/mesh/light_hsl", "libraries/bluetooth/mesh/light_hsl"),
+    ("libraries/bluetooth_services/mesh/light_hsl_cli", "libraries/bluetooth/mesh/light_hsl_cli"),
+    ("libraries/bluetooth_services/mesh/light_hsl_srv", "libraries/bluetooth/mesh/light_hsl_srv"),
+    ("libraries/bluetooth_services/mesh/light_hue_srv", "libraries/bluetooth/mesh/light_hue_srv"),
+    ("libraries/bluetooth_services/mesh/light_sat_srv", "libraries/bluetooth/mesh/light_sat_srv"),
+    ("libraries/bluetooth_services/mesh/sensor_models", "libraries/bluetooth/mesh/sensor_models"),
+    ("libraries/bluetooth_services/mesh/sensor_srv", "libraries/bluetooth/mesh/sensor_srv"),
+    ("libraries/bluetooth_services/mesh/sensor_cli", "libraries/bluetooth/mesh/sensor_cli"),
+    ("libraries/bluetooth_services/mesh/time", "libraries/bluetooth/mesh/time"),
+    ("libraries/bluetooth_services/mesh/time_tai", "libraries/bluetooth/mesh/time_tai"),
+    ("libraries/bluetooth_services/mesh/time_srv", "libraries/bluetooth/mesh/time_srv"),
+    ("libraries/bluetooth_services/mesh/time_cli", "libraries/bluetooth/mesh/time_cli"),
+    ("libraries/bluetooth_services/mesh/scene", "libraries/bluetooth/mesh/scene"),
+    ("libraries/bluetooth_services/mesh/scene_srv", "libraries/bluetooth/mesh/scene_srv"),
+    ("libraries/bluetooth_services/mesh/scene_cli", "libraries/bluetooth/mesh/scene_cli"),
+    ("libraries/bluetooth_services/mesh/scheduler", "libraries/bluetooth/mesh/scheduler"),
+    ("libraries/bluetooth_services/mesh/scheduler_srv", "libraries/bluetooth/mesh/scheduler_srv"),
+    ("libraries/bluetooth_services/mesh/scheduler_cli", "libraries/bluetooth/mesh/scheduler_cli"),
+    ("libraries/bluetooth_services/mesh/vnd/silvair_enocean_srv", "libraries/bluetooth/mesh/vnd/silvair_enocean_srv"),
+    ("libraries/bluetooth_services/mesh/vnd/dm", "libraries/bluetooth/mesh/vnd/dm"),
+    ("libraries/bluetooth_services/mesh/vnd/dm_srv", "libraries/bluetooth/mesh/vnd/dm_srv"),
+    ("libraries/bluetooth_services/mesh/vnd/dm_cli", "libraries/bluetooth/mesh/vnd/dm_cli"),
+    ("libraries/bluetooth_services/mesh/vnd/le_pair_resp", "libraries/bluetooth/mesh/vnd/le_pair_resp"),
+    ("libraries/bluetooth_services/mesh/models", "libraries/bluetooth/mesh/models"),
+    ("libraries/bluetooth_services/mesh/properties", "libraries/bluetooth/mesh/properties"),
+    ("libraries/bluetooth_services/mesh/dk_prov", "libraries/bluetooth/mesh/dk_prov"),
+    ("libraries/bluetooth_services/mesh/sensor", "libraries/bluetooth/mesh/sensor"),
+    ("libraries/bluetooth_services/mesh/sensor_types", "libraries/bluetooth/mesh/sensor_types"),
+    ("libraries/bluetooth_services/radio_notification_conn_cb", "libraries/bluetooth/radio_notification_conn_cb"),
+    ("libraries/bluetooth_services/rpc", "libraries/bluetooth/rpc"),
+    ("libraries/bluetooth_services/scan", "libraries/bluetooth/scan"),
+    ("libraries/bluetooth_services/services/ams_client", "libraries/bluetooth/services/ams_client"),
+    ("libraries/bluetooth_services/services/ancs_client", "libraries/bluetooth/services/ancs_client"),
+    ("libraries/bluetooth_services/services/bas_client", "libraries/bluetooth/services/bas_client"),
+    ("libraries/bluetooth_services/services/bms", "libraries/bluetooth/services/bms"),
+    ("libraries/bluetooth_services/services/cgms", "libraries/bluetooth/services/cgms"),
+    ("libraries/bluetooth_services/services/cts_client", "libraries/bluetooth/services/cts_client"),
+    ("libraries/bluetooth_services/services/ddfs", "libraries/bluetooth/services/ddfs"),
+    ("libraries/bluetooth_services/services/dfu_smp", "libraries/bluetooth/services/dfu_smp"),
+    ("libraries/bluetooth_services/services/fast_pair", "libraries/bluetooth/services/fast_pair"),
+    ("libraries/bluetooth_services/services/gattp", "libraries/bluetooth/services/gattp"),
+    ("libraries/bluetooth_services/services/hids", "libraries/bluetooth/services/hids"),
+    ("libraries/bluetooth_services/services/hogp", "libraries/bluetooth/services/hogp"),
+    ("libraries/bluetooth_services/services/hrs_client", "libraries/bluetooth/services/hrs_client"),
+    ("libraries/bluetooth_services/services/latency", "libraries/bluetooth/services/latency"),
+    ("libraries/bluetooth_services/services/latency_client", "libraries/bluetooth/services/latency_client"),
+    ("libraries/bluetooth_services/services/lbs", "libraries/bluetooth/services/lbs"),
+    ("libraries/bluetooth_services/services/mds", "libraries/bluetooth/services/mds"),
+    ("libraries/bluetooth_services/services/nsms", "libraries/bluetooth/services/nsms"),
+    ("libraries/bluetooth_services/services/nus", "libraries/bluetooth/services/nus"),
+    ("libraries/bluetooth_services/services/nus_client", "libraries/bluetooth/services/nus_client"),
+    ("libraries/bluetooth_services/services/rscs", "libraries/bluetooth/services/rscs"),
+    ("libraries/bluetooth_services/services/throughput", "libraries/bluetooth/services/throughput"),
+    ("libraries/bluetooth_services/services/wifi_prov", "libraries/bluetooth/services/wifi_prov"),
     ("libraries/networking/nrf_cloud_agps", "libraries/networking/nrf_cloud_agnss"), # nRF Cloud A-GNSS
     ("libraries/bootloader/index", "libraries/security/bootloader/index"), # Bootloader libraries (landing)
     ("libraries/bootloader/bl_crypto", "libraries/security/bootloader/bl_crypto"), # Bootloader crypto
@@ -485,4 +561,67 @@ NRF = [
     ("software_maturity", "releases_and_maturity/software_maturity"), # Software maturity
     ("known_issues", "releases_and_maturity/known_issues"), # Known issues
     ("releases_and_maturity/glossary", "glossary"), # Glossary
+    # 54H new links
+    ("device_guides/nrf54h", "app_dev/device_guides/nrf54h/index"), # Developing with nRF54H Series
+    ("app_dev/device_guides/nrf54h", "app_dev/device_guides/nrf54h/index"),  # Developing with nRF54H Series
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_app_samples", "app_dev/device_guides/nrf54h/ug_nrf54h20_app_samples"), # nRF54H20 applications and samples (orphaned as of 2.7.0)
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture"), # Architecture of nRF54H20 (landing)
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_boot", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_boot"), # nRF54H20 Boot Sequence
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_clockman", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_clockman"), # nRF54H20 clock management
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_cpu", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_cpu"), # nRF54H20 Domains
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_ipc", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_ipc"), # Interprocessor Communication in nRF54H20
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_lifecycle", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_lifecycle"), # nRF54H20 lifecycle states
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_memory", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_memory"), # nRF54H20 Memory Layout
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_pm", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_pm"), # nRF54H20 Power Management
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_reset", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_reset"), # nRF54H20 Reset
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_configuration", "app_dev/device_guides/nrf54h/ug_nrf54h20_configuration"), # Configuring the nRF54H20 DK
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_custom_pcb", "app_dev/device_guides/nrf54h/ug_nrf54h20_custom_pcb"), # Configuring your application for a custom PCB
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_debugging", "app_dev/device_guides/nrf54h/ug_nrf54h20_debugging"), # nRF54H20 debugging
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_flpr", "app_dev/device_guides/nrf54h/ug_nrf54h20_flpr"), # nRF54H20 SoC FLPR guide
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_gs", "app_dev/device_guides/nrf54h/ug_nrf54h20_gs"), # Getting started with the nRF54H20 DK
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_logging", "app_dev/device_guides/nrf54h/ug_nrf54h20_logging"), # nRF54H20 logging (orphaned as of 2.7.0)
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_nrf7002ek", "app_dev/device_guides/nrf54h/ug_nrf54h20_nrf7002ek"), # Working with the nRF54H20 DK and the nRF7002 EK (orphaned as of 2.7.0)
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_components", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_components"), # SUIT components
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_dfu", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_customize_dfu"), # How to customize the SUIT DFU process
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_qsg", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_customize_qsg"), # Customize SUIT DFU quick start guide
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_device_config", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_device_config"), # SUIT device configuration
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_dfu", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_dfu"), # Device Firmware Update using SUIT (landing)
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_external_memory", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_external_memory"), # Firmware upgrade with external memory
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_fetch", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_fetch"), # How to fetch payloads
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_hierarchical_manifests", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_hierarchical_manifests"), # Hierarchical manifests
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_intro", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_intro"), # Introduction to SUIT
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_manifest_overview", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_manifest_overview"), # SUIT manifest overview
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_push", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_push"), # SUIT push
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_recovery", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_recovery"), # SUIT recovery
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_sdfw_sdrfw_update", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_sdfw_sdrfw_update"), # SUIT SoC binaries update
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_smp", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_smp"), # SUIT SMP protocol
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_soc_binaries", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_soc_binaries"), # SUIT SoC binaries
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_compare_other_dfu", "app_dev/bootloaders_dfu/index"), # DFU and bootloader comparison (removed after 2.7.0) > Bootloaders and DFU (landing)
+    ("app_dev/device_guides/working_with_nrf/nrf54h", "app_dev/device_guides/nrf54h/index"), # nRF54H index
+    # 54H legacy links
+    ("device_guides/nrf54h", "app_dev/device_guides/nrf54h"), # Developing with nRF54H Series
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_gs",  "app_dev/device_guides/nrf54h/ug_nrf54h20_gs"), # Getting started with the nRF54H20 DK
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_app_samples", "app_dev/device_guides/nrf54h/ug_nrf54h20_app_samples"), # nRF54H20 applications and samples (orphaned as of 2.7.0)
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture"), # Architecture of nRF54H20 (landing)
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_cpu", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_cpu"), # nRF54H20 Domains
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_memory", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_memory"), # nRF54H20 Memory Layout
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_ipc", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_ipc"), # Interprocessor Communication in nRF54H20
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_boot", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_boot"), # nRF54H20 Boot Sequence
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_architecture_lifecycle", "app_dev/device_guides/nrf54h/ug_nrf54h20_architecture_lifecycle"), # nRF54H20 lifecycle states
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_configuration", "app_dev/device_guides/nrf54h/ug_nrf54h20_configuration"), # Configuring the nRF54H20 DK
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_logging", "app_dev/device_guides/nrf54h/ug_nrf54h20_logging"), # nRF54H20 logging (orphaned as of 2.7.0)
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_nrf7002ek", "app_dev/device_guides/nrf54h/ug_nrf54h20_nrf7002ek"), # Working with the nRF54H20 DK and the nRF7002 EK (orphaned as of 2.7.0)
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_dfu", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_dfu"), # Device Firmware Update using SUIT (landing)
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_intro", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_intro"), # Introduction to SUIT
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_manifest_overview", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_manifest_overview"), # SUIT manifest overview
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_qsg", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_customize_qsg"), # Customize SUIT DFU quick start guide
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_customize_dfu", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_customize_dfu"), # How to customize the SUIT DFU process
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_fetch", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_fetch"), # How to fetch payloads
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_external_memory", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_external_memory"), # Firmware upgrade with external memory
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_components", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_components"), # SUIT components
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_hierarchical_manifests", "app_dev/device_guides/nrf54h/ug_nrf54h20_suit_hierarchical_manifests"), # Hierarchical manifests
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_compare_other_dfu", "app_dev/bootloaders_dfu/index"), # DFU and bootloader comparison (removed after 2.7.0) > Bootloaders and DFU (landing)
+    ("app_dev/device_guides/working_with_nrf/nrf54h/ug_nrf54h20_suit_compare_other_dfu", "app_dev/bootloaders_dfu/index"),
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_debugging", "app_dev/device_guides/nrf54h/ug_nrf54h20_debugging"), # nRF54H20 debugging
+    ("device_guides/working_with_nrf/nrf54h/ug_nrf54h20_custom_pcb", "app_dev/device_guides/nrf54h/ug_nrf54h20_custom_pcb"), # Configuring your application for a custom PCB
 ]

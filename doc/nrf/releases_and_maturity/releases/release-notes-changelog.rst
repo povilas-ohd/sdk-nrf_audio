@@ -1,6 +1,6 @@
 .. _ncs_release_notes_changelog:
 
-Changelog for |NCS| v2.7.99
+Changelog for |NCS| v2.8.99
 ###########################
 
 .. contents::
@@ -23,7 +23,7 @@ Known issues
 ************
 
 Known issues are only tracked for the latest official release.
-See :ref:`known_issues` for the list of issues valid for the latest release.
+See `known issues for nRF Connect SDK v2.8.0`_ for the list of issues valid for the latest release.
 
 Changelog
 *********
@@ -38,7 +38,10 @@ IDE, OS, and tool support
 Board support
 =============
 
-|no_changes_yet_note|
+* Updated various tests and samples to use Zephyr's :ref:`native_sim<zephyr:native_sim>` instead of Zephyr's :ref:`native_posix<zephyr:native_posix>` for :ref:`running_unit_tests`.
+  This mirrors the deprecation of ``native_posix`` in Zephyr.
+  Support for ``native_posix`` will be removed in Zephyr with the v4.2 release.
+  In the |NCS|, it will be removed once Zephyr v4.2 is upmerged to sdk-nrf.
 
 Build and configuration system
 ==============================
@@ -48,7 +51,8 @@ Build and configuration system
 Bootloaders and DFU
 ===================
 
-|no_changes_yet_note|
+* Updated the allowed offset for :ref:`doc_fw_info` in the :ref:`bootloader`.
+  It can now be placed at offset ``0x600``, however, it cannot be used for any applications with |NSIB| compiled before this change.
 
 Developing with nRF91 Series
 ============================
@@ -83,7 +87,8 @@ Developing with nRF52 Series
 Developing with Front-End Modules
 =================================
 
-|no_changes_yet_note|
+* Deprecated the explicit use of ``-DSHIELD=nrf21540ek_fwd`` for boards with ``nrf5340/cpuapp`` qualifiers when the nRF21540 EK shield is used.
+  The build system uses an appropriate overlay file for each core, relying only on the ``-DSHIELD=nrf21540ek`` parameter.
 
 Developing with PMICs
 =====================
@@ -133,16 +138,44 @@ Gazell
 Matter
 ------
 
-|no_changes_yet_note|
+* Added implementation of the :cpp:class:`Spake2pVerifier` class for the PSA crypto backend.
+  You can use this class to generate the Spake2+ verifier at runtime.
+  To use this class, enable the :kconfig:option:`CONFIG_PSA_WANT_ALG_PBKDF2_HMAC` and :kconfig:option:`CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE` Kconfig options.
 
 Matter fork
 +++++++++++
 
-The Matter fork in the |NCS| (``sdk-connectedhomeip``) contains all commits from the upstream Matter repository up to, and including, the ``v1.3.0.0`` tag.
+The Matter fork in the |NCS| (``sdk-connectedhomeip``) contains all commits from the upstream Matter repository up to, and including, the ``v1.4.0.0`` tag.
 
 The following list summarizes the most important changes inherited from the upstream Matter:
 
-|no_changes_yet_note|
+* Added:
+
+  * Enhanced Network Infrastructure with Home Routers and Access Points (HRAP).
+    This provides requirements for devices such as home routers, modems or access points to create a necessary infrastructure for Matter products.
+  * Enhanced Multi-Admin that aims to simplify the smart home management from the user perspective.
+    This term includes several different features and in this release only Fabric Synchronization was fully delivered.
+    The Fabric Synchronization enables commissioning of devices from one fabric to another without requiring manual user actions, only user consent.
+  * Dynamic SIT LIT switching support that allows the application to switch between these modes, as long as the requirements for these modes are met.
+    This can be enabled using the :kconfig:option:`CONFIG_CHIP_ICD_DSLS_SUPPORT` Kconfig option.
+  * The Kconfig option :kconfig:option:`CONFIG_CHIP_ICD_SIT_SLOW_POLL_LIMIT` to limit the slow polling interval value for the device while it is in the SIT mode.
+    This can be used to limit the slow poll interval for the ICD LIT device while it is temporarily working in the SIT mode.
+  * New device types:
+
+    * Water heater
+    * Solar power
+    * Battery storage
+    * Heat pump
+    * Mounted on/off control
+    * Mounted dimmable load control
+
+* Updated:
+
+  * Thermostat cluster with support for scheduling and preset modes, like vacation, and home or away settings.
+  * Electric Vehicle Supply Equipment (EVSE) with support for user-defined charging preferences, like specifying the time when the car will be charged.
+  * Occupancy sensing cluster with features like radar, vision, and ambient sensing.
+  * Intermittently Connected Devices feature with enhancements for the Long Idle Time (LIT) and Check-In Protocol.
+    With this enhancements, the state of this feature is changed from provisional to certifiable.
 
 nRF IEEE 802.15.4 radio driver
 ------------------------------
@@ -152,12 +185,12 @@ nRF IEEE 802.15.4 radio driver
 Thread
 ------
 
-|no_changes_yet_note|
+* Added Kconfig options for configuring the MLE child update timeout, child supervision interval, and child supervision check timeout.
 
 Zigbee
 ------
 
-* Fixed the :file:`zb_add_ota_header.py` script not being able to handle an ``APPLICATION_VERSION_STRING`` which includes a tweak, such as ``1.0.0+3``.
+|no_changes_yet_note|
 
 Wi-Fi
 -----
@@ -182,7 +215,8 @@ Asset Tracker v2
 Connectivity Bridge
 -------------------
 
-|no_changes_yet_note|
+* Updated the handling of USB CDC ACM baud rate requests to make sure the baud rate is set correctly when the host requests a change.
+  This fixes an issue when using GNU screen with the Thingy:91 X.
 
 IPC radio firmware
 ------------------
@@ -197,12 +231,28 @@ Matter Bridge
 nRF5340 Audio
 -------------
 
-|no_changes_yet_note|
+* Updated the documentation for :ref:`nrf53_audio_app_building` with cross-links and additional information, based on user feedback.
 
 nRF Desktop
 -----------
 
-|no_changes_yet_note|
+* Updated:
+
+  * The :ref:`nrf_desktop_settings_loader` to make the :ref:`Zephyr Memory Storage (ZMS) <zephyr:zms_api>` the default settings backend for all board targets that use the MRAM technology.
+    As a result, all :ref:`zephyr:nrf54h20dk_nrf54h20` configurations were migrated from the NVS settings backend to the ZMS settings backend.
+  * The :ref:`zephyr:nrf54h20dk_nrf54h20` release configuration to enable the :ref:`nrf_desktop_watchdog`.
+  * The configuration files of the :ref:`nrf_desktop_click_detector` (:file:`click_detector_def.h`) to allow using them also when Bluetooth LE peer control using a dedicated button (:ref:`CONFIG_DESKTOP_BLE_PEER_CONTROL <config_desktop_app_options>`) is disabled.
+  * The DTS description for board targets with a different DTS overlay file for each build type to isolate the common configuration that is now defined in the :file:`app_common.dtsi` file.
+    The following board configurations have been updated:
+
+    * :ref:`zephyr:nrf52840dk_nrf52840`
+    * :ref:`zephyr:nrf52840dongle_nrf52840`
+    * :ref:`zephyr:nrf54l15dk_nrf54l15`
+    * :ref:`zephyr:nrf54h20dk_nrf54h20`
+
+* Removed imply for partial erase feature of the nRF SoC flash driver (:kconfig:option:`CONFIG_SOC_FLASH_NRF_PARTIAL_ERASE`) for the USB next stack (:ref:`CONFIG_DESKTOP_USB_STACK_NEXT <config_desktop_app_options>`).
+  The partial erase feature was used as a workaround for device errors that might be reported by the Windows USB host in Device Manager if a USB cable is connected while erasing a secondary image slot in the background.
+  The workaround is no longer needed after the nRF UDC driver was improved.
 
 nRF Machine Learning (Edge Impulse)
 -----------------------------------
@@ -232,12 +282,31 @@ Amazon Sidewalk samples
 Bluetooth samples
 -----------------
 
-|no_changes_yet_note|
+* Added:
+
+  * The :ref:`channel_sounding_ras_reflector` sample demonstrating how to implement a Channel Sounding Reflector that exposes the Ranging Responder GATT Service.
+  * The :ref:`channel_sounding_ras_initiator` sample demonstrating basic distance estimation with Channel Sounding by setting up a Channel Sounding Initiator that acts as a Ranging Requestor GATT Client.
+  * Support for the ``nrf54l15dk/nrf54l05/cpuapp`` and ``nrf54l15dk/nrf54l10/cpuapp`` board targets in the following sample:
+
+    * :ref:`peripheral_hids_mouse`
+
+* Updated:
+
+  * Configurations of the following Bluetooth samples to make the :ref:`Zephyr Memory Storage (ZMS) <zephyr:zms_api>` the default settings backend for all board targets that use the MRAM technology:
+
+      * :ref:`bluetooth_central_hids`
+      * :ref:`peripheral_hids_keyboard`
+      * :ref:`peripheral_hids_mouse`
+
+    As a result, all :ref:`zephyr:nrf54h20dk_nrf54h20` configurations of the affected samples were migrated from the NVS settings backend to the ZMS settings backend.
+  * Testing steps in the :ref:`peripheral_hids_mouse` to provide the build configuration that is compatible with the `Bluetooth Low Energy app`_ testing tool.
 
 Bluetooth Fast Pair samples
 ---------------------------
 
-|no_changes_yet_note|
+* :ref:`fast_pair_locator_tag` sample:
+
+  * Updated the MCUboot bootloader configuration for the :ref:`zephyr:nrf54l15dk_nrf54l15` board target to enable the :kconfig:option:`CONFIG_FPROTECT` Kconfig option that is used to protect the bootloader partition against memory corruption.
 
 Bluetooth Mesh samples
 ----------------------
@@ -247,7 +316,18 @@ Bluetooth Mesh samples
 Cellular samples
 ----------------
 
-|no_changes_yet_note|
+* Updated the :kconfig:option:`CONFIG_NRF_CLOUD_CHECK_CREDENTIALS` Kconfig option to be optional and enabled by default for the following samples:
+
+  * :ref:`nrf_cloud_rest_cell_location`
+  * :ref:`nrf_cloud_rest_device_message`
+  * :ref:`nrf_cloud_rest_fota`
+
+* :ref:`location_sample` sample:
+
+  * Updated:
+
+    * The Thingy:91 X build to support Wi-Fi by default without overlays.
+
 Cryptography samples
 --------------------
 
@@ -270,14 +350,12 @@ DECT NR+ samples
       This is not a full MAC implementation and not fully compliant with DECT NR+ MAC specification (`ETSI TS 103 636-4`_).
     * The ``startup_cmd`` command.
       This command is used to store shell commands to be run sequentially after bootup.
+    * Band 4 support for nRF9151 with modem firmware v1.0.2.
 
   * Updated:
 
     * The ``dect rssi_scan`` command with busy/possible/free subslot count-based RSSI scan.
     * The ``dect rx`` command to provide the possibility to iterate all channels and to enable RX filter.
-
-Edge Impulse samples
---------------------
 
 Edge Impulse samples
 --------------------
@@ -308,7 +386,12 @@ Keys samples
 Matter samples
 --------------
 
-|no_changes_yet_note|
+* Updated all Matter samples that support low-power mode to enable the :ref:`lib_ram_pwrdn` feature.
+  It is enabled by default for the release configuration of the :ref:`matter_lock_sample`, :ref:`matter_light_switch_sample`, :ref:`matter_smoke_co_alarm_sample`, and :ref:`matter_window_covering_sample` samples.
+
+* :ref:`matter_template_sample` sample:
+
+  * Updated the internal configuration for the :ref:`zephyr:nrf54l15dk_nrf54l15` target to use the DFU image compression and provide more memory space for the application.
 
 Networking samples
 ------------------
@@ -338,7 +421,8 @@ PMIC samples
 Protocol serialization samples
 ------------------------------
 
-|no_changes_yet_note|
+* Updated GPIO pins on nRF54L15 DK used for communication between the client and server over UART.
+  One of the previously selected pins was also used to drive an LED, which may have disrupted the UART communication.
 
 SDFW samples
 ------------
@@ -364,7 +448,7 @@ Trusted Firmware-M (TF-M) samples
 Thread samples
 --------------
 
-|no_changes_yet_note|
+* Removed support for the ``nrf5340dk/nrf5340/cpuapp/ns`` build target for all samples.
 
 Zigbee samples
 --------------
@@ -379,7 +463,19 @@ Wi-Fi samples
 Other samples
 -------------
 
-|no_changes_yet_note|
+* :ref:`coremark_sample` sample:
+
+  * Updated:
+
+    * Configuration for the :ref:`zephyr:nrf54h20dk_nrf54h20` board to support multi-domain logging using the ARM Coresight STM.
+    * The logging format in the standard logging mode to align it with the format used in the multi-domain logging mode.
+    * Support for alternative configurations to use the :ref:`file suffix feature from Zephyr <app_build_file_suffixes>`.
+      The following file suffixes are supported as alternative configurations:
+
+        * ``flash_and_run``
+        * ``heap_memory``
+        * ``static_memory``
+        * ``multiple_threads``
 
 Drivers
 =======
@@ -391,7 +487,7 @@ This section provides detailed lists of changes by :ref:`driver <drivers>`.
 Wi-Fi drivers
 -------------
 
-|no_changes_yet_note|
+* Added the :ref:`nrf70_wifi_tx_power_calculation` section to the :ref:`nrf70_wifi` page.
 
 Libraries
 =========
@@ -401,12 +497,18 @@ This section provides detailed lists of changes by :ref:`library <libraries>`.
 Binary libraries
 ----------------
 
-|no_changes_yet_note|
+* :ref:`liblwm2m_carrier_readme` library:
+
+  * Updated the :ref:`req_appln_limitations` page to clarify carrier-specific requirements.
+    Added overlay files and documentation to :ref:`serial_lte_modem` application and :ref:`lwm2m_carrier` sample to guide in the correct usage of LwM2M carrier library for SoftBank and LG U+.
 
 Bluetooth libraries and services
 --------------------------------
 
-|no_changes_yet_note|
+* :ref:`hogp_readme` library:
+
+  * Updated the :c:func:`bt_hogp_rep_read` function to forward the GATT read error code through the registered user callback.
+    This ensures that API user is aware of the error.
 
 Common Application Framework
 ----------------------------
@@ -546,21 +648,21 @@ Zephyr
 
 .. NOTE TO MAINTAINERS: All the Zephyr commits in the below git commands must be handled specially after each upmerge and each nRF Connect SDK release.
 
-The Zephyr fork in |NCS| (``sdk-zephyr``) contains all commits from the upstream Zephyr repository up to and including ``ea02b93eea35afef32ebb31f49f8e79932e7deee``, with some |NCS| specific additions.
+The Zephyr fork in |NCS| (``sdk-zephyr``) contains all commits from the upstream Zephyr repository up to and including ``beb733919d8d64a778a11bd5e7d5cbe5ae27b8ee``, with some |NCS| specific additions.
 
 For the list of upstream Zephyr commits (not including cherry-picked commits) incorporated into nRF Connect SDK since the most recent release, run the following command from the :file:`ncs/zephyr` repository (after running ``west update``):
 
 .. code-block:: none
 
-   git log --oneline ea02b93eea ^23cf38934c
+   git log --oneline beb733919d ^ea02b93eea
 
 For the list of |NCS| specific commits, including commits cherry-picked from upstream, run:
 
 .. code-block:: none
 
-   git log --oneline manifest-rev ^ea02b93eea
+   git log --oneline manifest-rev ^beb733919d
 
-The current |NCS| main branch is based on revision ``ea02b93eea`` of Zephyr.
+The current |NCS| main branch is based on revision ``beb733919d`` of Zephyr.
 
 .. note::
    For possible breaking changes and changes between the latest Zephyr release and the current Zephyr version, refer to the :ref:`Zephyr release notes <zephyr_release_notes>`.
@@ -588,4 +690,4 @@ cJSON
 Documentation
 =============
 
-|no_changes_yet_note|
+* Fixed an issue on the :ref:`install_ncs` page where an incorrect directory path was provided for Linux and macOS at the end of the :ref:`cloning_the_repositories_win` section.

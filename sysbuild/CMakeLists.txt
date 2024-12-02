@@ -231,6 +231,7 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
       set_config_bool(mcuboot CONFIG_NRF_SECURITY y)
       set_config_bool(mcuboot CONFIG_BOOT_IMG_HASH_ALG_SHA512 y)
       set_config_bool(${DEFAULT_IMAGE} CONFIG_MCUBOOT_BOOTLOADER_SIGNATURE_TYPE_ED25519 y)
+      set_config_bool(${DEFAULT_IMAGE} CONFIG_MCUBOOT_BOOTLOADER_USES_SHA512 y)
 
       if(SB_CONFIG_MCUBOOT_SIGNATURE_USING_KMU)
         set_config_bool(mcuboot CONFIG_BOOT_SIGNATURE_USING_KMU y)
@@ -245,6 +246,8 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
         set_config_bool(mcuboot CONFIG_BOOT_SIGNATURE_TYPE_PURE n)
         set_config_bool(${DEFAULT_IMAGE} CONFIG_MCUBOOT_BOOTLOADER_SIGNATURE_TYPE_PURE n)
       endif()
+    else()
+      set_config_bool(${DEFAULT_IMAGE} CONFIG_MCUBOOT_BOOTLOADER_USES_SHA512 n)
     endif()
 
     # A v1 board doesn't define board qualifiers, thus below test will just test the pure board
@@ -495,7 +498,10 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
     set_config_bool(${DEFAULT_IMAGE} CONFIG_BT_FAST_PAIR y)
 
     if(DEFINED FP_MODEL_ID AND DEFINED FP_ANTI_SPOOFING_KEY)
-      include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair_hex.cmake)
+      if(SB_CONFIG_PARTITION_MANAGER)
+        include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair_hex.cmake)
+      endif()
+
       set(FP_DATA_PRESENT "y" CACHE INTERNAL "Fast Pair provisioning data provided" FORCE)
     else()
       message(WARNING "Fast Pair support is enabled but `FP_MODEL_ID` or `FP_ANTI_SPOOFING_KEY` were not provided, this is likely to cause a build error")
@@ -554,33 +560,53 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
   if(SB_CONFIG_SUIT_BUILD_RECOVERY)
     set_config_bool(${DEFAULT_IMAGE} CONFIG_SUIT_MPI_APP_RECOVERY y)
     set_config_bool(${DEFAULT_IMAGE} CONFIG_SUIT_MPI_RAD_RECOVERY y)
+
+    if(SB_CONFIG_SUIT_RECOVERY_APPLICATION_IMAGE_MANIFEST_APP_LOCAL_3)
+      set_config_bool(${DEFAULT_IMAGE} CONFIG_SUIT_MPI_APP_LOCAL_3 y)
+    endif()
   endif()
 
   if(SB_CONFIG_SDP)
     include_sdp()
   endif()
 
-  foreach(config APPROTECT_USE_UICR APPROTECT_LOCK APPROTECT_USER_HANDLING
-  SECURE_APPROTECT_USE_UICR SECURE_APPROTECT_USER_HANDLING SECURE_APPROTECT_LOCK)
-    if(SB_CONFIG_${config})
-      if(SB_CONFIG_BOOTLOADER_MCUBOOT)
-        set_config_bool(mcuboot CONFIG_NRF_${config} y)
-      endif()
-      if(SB_CONFIG_SECURE_BOOT_APPCORE)
-        set_config_bool(b0 CONFIG_NRF_${config} y)
-      endif()
-      set_config_bool(${DEFAULT_IMAGE} CONFIG_NRF_${config} y)
+  if(SB_CONFIG_APPROTECT_USE_UICR OR SB_CONFIG_APPROTECT_LOCK OR SB_CONFIG_APPROTECT_USER_HANDLING OR
+     SB_CONFIG_SECURE_APPROTECT_USE_UICR OR SB_CONFIG_SECURE_APPROTECT_LOCK OR SB_CONFIG_SECURE_APPROTECT_USER_HANDLING)
+    # Apply APPROTECT configuration to target images
+    if(SB_CONFIG_APPROTECT_USE_UICR)
+      set(normal_approtect CONFIG_NRF_APPROTECT_USE_UICR)
+    elseif(SB_CONFIG_APPROTECT_LOCK)
+      set(normal_approtect CONFIG_NRF_APPROTECT_LOCK)
+    elseif(SB_CONFIG_APPROTECT_USER_HANDLING)
+      set(normal_approtect CONFIG_NRF_APPROTECT_USER_HANDLING)
     endif()
-  endforeach()
-  if(SB_CONFIG_SUPPORT_NETCORE AND NOT SB_CONFIG_NETCORE_NONE)
-    foreach(config APPROTECT_USE_UICR APPROTECT_LOCK APPROTECT_USER_HANDLING)
-      if(SB_CONFIG_${config})
-        if(SB_CONFIG_SECURE_BOOT_NETCORE)
-          set_config_bool(b0n CONFIG_NRF_${config} y)
-        endif()
-        set_config_bool(${SB_CONFIG_NETCORE_IMAGE_NAME} CONFIG_NRF_${config} y)
+
+    if(SB_CONFIG_SECURE_APPROTECT_USE_UICR)
+      set(secure_approtect CONFIG_NRF_SECURE_APPROTECT_USE_UICR)
+    elseif(SB_CONFIG_SECURE_APPROTECT_LOCK)
+      set(secure_approtect CONFIG_NRF_SECURE_APPROTECT_LOCK)
+    elseif(SB_CONFIG_SECURE_APPROTECT_USER_HANDLING)
+      set(secure_approtect CONFIG_NRF_SECURE_APPROTECT_USER_HANDLING)
+    endif()
+
+    if(SB_CONFIG_SUPPORT_NETCORE AND NOT SB_CONFIG_NETCORE_NONE)
+      get_property(network_images GLOBAL PROPERTY PM_${SB_CONFIG_NETCORE_IMAGE_DOMAIN}_IMAGES)
+    endif()
+
+    foreach(image ${IMAGES})
+      if(secure_approtect AND SB_CONFIG_SUPPORT_NETCORE AND NOT SB_CONFIG_NETCORE_NONE AND ${image} IN_LIST network_images)
+        # Network core image
+        set_config_bool(${image} ${normal_approtect} y)
+      elseif(normal_approtect)
+        # Application (or other) core image
+        set_config_bool(${image} ${normal_approtect} y)
+        set_config_bool(${image} ${secure_approtect} y)
       endif()
     endforeach()
+
+    set(normal_approtect)
+    set(secure_approtect)
+    set(network_images)
   endif()
 
 endfunction(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
@@ -610,16 +636,21 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_post_cmake)
 
   set_property(GLOBAL PROPERTY DOMAIN_APP_APP ${DEFAULT_IMAGE})
 
+  # Include any files that need to merge files with uicr_merged.hex before including suit
+  if(FP_DATA_PRESENT AND NOT SB_CONFIG_PARTITION_MANAGER)
+    include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair_hex.cmake)
+  endif()
+
+  if(SB_CONFIG_MATTER_FACTORY_DATA_GENERATE)
+    include(${ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR}/config/nrfconnect/chip-module/generate_factory_data_sysbuild.cmake)
+    nrfconnect_generate_factory_data()
+  endif()
+
   include_packaging()
   include_suit()
 
   if(SB_CONFIG_SECURE_BOOT OR SB_CONFIG_MCUBOOT_HARDWARE_DOWNGRADE_PREVENTION)
     include_provision_hex()
-  endif()
-
-  if(SB_CONFIG_MATTER_FACTORY_DATA_GENERATE AND SB_CONFIG_PARTITION_MANAGER)
-    include(${ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR}/config/nrfconnect/chip-module/generate_factory_data_sysbuild.cmake)
-    nrfconnect_generate_factory_data()
   endif()
 
   if(SB_CONFIG_MATTER_OTA)
